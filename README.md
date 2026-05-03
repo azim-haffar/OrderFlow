@@ -56,7 +56,9 @@ docker compose up --build
   Order status: CONFIRMED / CANCELLED
 ```
 
-Order lifecycle: POST /api/orders -> DB save -> Kafka publish -> consumer acquires row lock -> stock check -> status update -> client polls result
+Order lifecycle: POST /api/orders → DB save → Kafka publish → consumer acquires row lock → stock check → CONFIRMED / CANCELLED
+
+Client cancellation: DELETE /api/orders/{id} → status guard (PLACED only) → CANCELLED (204) · already CONFIRMED/CANCELLED → 409
 
 ### Engineering Decisions
 
@@ -71,6 +73,7 @@ Order lifecycle: POST /api/orders -> DB save -> Kafka publish -> consumer acquir
 | **Testcontainers for integration tests** | Tests run against real PostgreSQL, Kafka, and Redis instances. No mocks means no mock/production divergence and no false-positive test suites. |
 | **Transactional Outbox Pattern** | Direct Kafka publish inside a DB transaction creates a dual-write problem — if Kafka is down, the order is saved but the event is lost. The outbox table commits atomically with the order row; a poller retries until Kafka acknowledges. |
 | **RFC 7807 ProblemDetail** | Gives API consumers a machine-readable, standardised error envelope. Raw HTTP status codes alone are insufficient for programmatic error handling. |
+| **DELETE cancels PLACED orders only** | An order that has already reached CONFIRMED or CANCELLED has been processed by the inventory consumer; mutating it after the fact would create stock and audit inconsistencies. The status guard enforces this invariant and returns 409 for any other state. |
 
 ### API Reference
 
@@ -150,6 +153,7 @@ docker compose up --build
 | **Keine @Data auf JPA-Entitäten** | Lomboks @Data generiert equals/hashCode über alle Felder. Auf Hibernate-Proxies führt das zu rekursiven Schleifen und LazyInitializationException beim Traversieren von Assoziationen. |
 | **Testcontainers für Integrationstests** | Tests laufen gegen echte PostgreSQL-, Kafka- und Redis-Instanzen. Keine Mocks bedeutet keine Mock/Prod-Divergenz und keine falsch-positiven Testsuiten. |
 | **RFC 7807 ProblemDetail** | Liefert API-Clients ein maschinell lesbares, standardisiertes Fehlerformat. Rohe HTTP-Statuscodes allein reichen für programmatische Fehlerbehandlung nicht aus. |
+| **DELETE storniert nur Bestellungen im Status PLACED** | Eine Bestellung, die bereits CONFIRMED oder CANCELLED erreicht hat, wurde vom Inventory-Consumer verarbeitet. Eine nachträgliche Mutation würde Bestand und Audit-Log inkonsistent machen. Der Status-Guard erzwingt diese Invariante und gibt für jeden anderen Zustand 409 zurück. |
 
 ### Tests ausführen
 
