@@ -1,5 +1,7 @@
 # OrderFlow
 
+![CI](https://github.com/azim-haffar/orderflow/actions/workflows/ci.yml/badge.svg)
+
 A production-grade, event-driven order processing system built with Spring Boot 3, Kafka KRaft, PostgreSQL, Redis, and React 18.
 
 [English](#english) · [Deutsch](#deutsch)
