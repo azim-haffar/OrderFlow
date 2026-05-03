@@ -29,6 +29,12 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrder(id));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long id) {
+        orderService.cancelOrder(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping
     public ResponseEntity<List<OrderResponse>> getRecentOrders() {
         return ResponseEntity.ok(orderService.getRecentOrders());

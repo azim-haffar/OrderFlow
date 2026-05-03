@@ -9,6 +9,7 @@ import com.orderflow.entity.OrderItem;
 import com.orderflow.entity.OutboxEvent;
 import com.orderflow.entity.Product;
 import com.orderflow.event.OrderPlacedEvent;
+import com.orderflow.exception.OrderNotCancellableException;
 import com.orderflow.exception.OrderNotFoundException;
 import com.orderflow.exception.ProductNotFoundException;
 import com.orderflow.repository.OrderRepository;
@@ -80,6 +81,19 @@ public class OrderService {
         }
 
         return OrderResponse.from(saved);
+    }
+
+    @Transactional
+    public void cancelOrder(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new OrderNotFoundException(id));
+
+        if (order.getStatus() != Order.Status.PLACED) {
+            throw new OrderNotCancellableException(id, order.getStatus());
+        }
+
+        order.setStatus(Order.Status.CANCELLED);
+        log.info("Order {} cancelled by client request", id);
     }
 
     @Transactional(readOnly = true)

@@ -81,8 +81,9 @@ Order lifecycle: POST /api/orders -> DB save -> Kafka publish -> consumer acquir
 | POST   | `/api/orders`         | Place a new order                    | `{ productId, quantity, customerId }`  |
 | GET    | `/api/orders/{id}`    | Poll order status                    | —                                      |
 | GET    | `/api/orders`         | Last 20 orders                       | —                                      |
+| DELETE | `/api/orders/{id}`    | Cancel order (PLACED status only)    | —                                      |
 
-Error codes: `400` Validation failed · `404` Order or product not found · `409` Insufficient stock
+Error codes: `400` Validation failed · `404` Order or product not found · `409` Insufficient stock / order not cancellable
 
 ### Tech Stack
 
