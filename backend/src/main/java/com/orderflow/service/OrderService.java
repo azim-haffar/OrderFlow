@@ -1,15 +1,18 @@
 package com.orderflow.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orderflow.dto.OrderResponse;
 import com.orderflow.dto.PlaceOrderRequest;
 import com.orderflow.entity.Order;
 import com.orderflow.entity.OrderItem;
+import com.orderflow.entity.OutboxEvent;
 import com.orderflow.entity.Product;
 import com.orderflow.event.OrderPlacedEvent;
 import com.orderflow.exception.OrderNotFoundException;
 import com.orderflow.exception.ProductNotFoundException;
-import com.orderflow.producer.OrderEventProducer;
 import com.orderflow.repository.OrderRepository;
+import com.orderflow.repository.OutboxEventRepository;
 import com.orderflow.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +30,8 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
-    private final OrderEventProducer orderEventProducer;
+    private final OutboxEventRepository outboxEventRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public OrderResponse placeOrder(PlaceOrderRequest request) {
@@ -49,7 +53,6 @@ public class OrderService {
         order.setTotalAmount(total);
         order.getItems().add(item);
 
-        // DB save BEFORE Kafka publish to prevent consumer race condition
         Order saved = orderRepository.save(order);
         log.info("Order {} saved with status PLACED for customer {}", saved.getId(), request.customerId());
 
@@ -62,7 +65,19 @@ public class OrderService {
                 saved.getCreatedAt()
         );
 
-        orderEventProducer.publishOrderPlaced(event);
+        // Write the outbox event in the same transaction as the order.
+        // The OutboxPoller publishes it to Kafka asynchronously, decoupling
+        // the DB commit from the Kafka send.
+        try {
+            OutboxEvent outboxEvent = new OutboxEvent(
+                    saved.getId().toString(),
+                    OrderPlacedEvent.class.getSimpleName(),
+                    objectMapper.writeValueAsString(event)
+            );
+            outboxEventRepository.save(outboxEvent);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Failed to serialize OrderPlacedEvent for order " + saved.getId(), ex);
+        }
 
         return OrderResponse.from(saved);
     }
