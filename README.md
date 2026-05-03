@@ -14,6 +14,8 @@ A production-grade, event-driven order processing system built with Spring Boot 
 
 OrderFlow is a full-stack demonstration of an event-driven microservice pattern: a React frontend places orders via REST, Spring Boot persists them to PostgreSQL and publishes events to Kafka, and an inventory consumer processes each event under a pessimistic database lock before resolving the order as CONFIRMED or CANCELLED. Redis caches the product catalogue with a 60-second TTL. The entire stack runs from a single `docker compose up --build`.
 
+![Overview dashboard](docs/screenshots/overview.png)
+
 ### Quick Start
 
 Prerequisites: Docker Desktop, Docker Compose v2
@@ -60,6 +62,8 @@ Order lifecycle: POST /api/orders → DB save → Kafka publish → consumer acq
 
 Client cancellation: DELETE /api/orders/{id} → status guard (PLACED only) → CANCELLED (204) · already CONFIRMED/CANCELLED → 409
 
+![Kafka event log](docs/screenshots/events.png)
+
 ### Engineering Decisions
 
 | Decision | Rationale |
@@ -87,6 +91,8 @@ Client cancellation: DELETE /api/orders/{id} → status guard (PLACED only) → 
 | DELETE | `/api/orders/{id}`    | Cancel order (PLACED status only)    | —                                      |
 
 Error codes: `400` Validation failed · `404` Order or product not found · `409` Insufficient stock / order not cancellable
+
+![Orders view](docs/screenshots/orders.png)
 
 ### Tech Stack
 
