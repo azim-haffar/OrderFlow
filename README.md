@@ -69,6 +69,7 @@ Order lifecycle: POST /api/orders -> DB save -> Kafka publish -> consumer acquir
 | **Denormalized productName on OrderItem** | Preserves historical accuracy. A product rename must not silently rewrite what a customer ordered; the name is captured at order time. |
 | **No @Data on JPA entities** | Lombok @Data generates equals/hashCode over all fields. On Hibernate-managed proxies this causes recursive loops and LazyInitializationException under association traversal. |
 | **Testcontainers for integration tests** | Tests run against real PostgreSQL, Kafka, and Redis instances. No mocks means no mock/production divergence and no false-positive test suites. |
+| **Transactional Outbox Pattern** | Direct Kafka publish inside a DB transaction creates a dual-write problem — if Kafka is down, the order is saved but the event is lost. The outbox table commits atomically with the order row; a poller retries until Kafka acknowledges. |
 | **RFC 7807 ProblemDetail** | Gives API consumers a machine-readable, standardised error envelope. Raw HTTP status codes alone are insufficient for programmatic error handling. |
 
 ### API Reference
