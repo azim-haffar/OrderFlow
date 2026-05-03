@@ -28,6 +28,14 @@ public class GlobalExceptionHandler {
         return detail;
     }
 
+    @ExceptionHandler(OrderNotCancellableException.class)
+    public ProblemDetail handleOrderNotCancellable(OrderNotCancellableException ex) {
+        ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        detail.setType(URI.create("https://orderflow.example/errors/order-not-cancellable"));
+        detail.setTitle("Order Not Cancellable");
+        return detail;
+    }
+
     @ExceptionHandler(InsufficientStockException.class)
     public ProblemDetail handleInsufficientStock(InsufficientStockException ex) {
         ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
