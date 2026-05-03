@@ -17,7 +17,7 @@ OrderFlow is a full-stack demonstration of an event-driven microservice pattern:
 Prerequisites: Docker Desktop, Docker Compose v2
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/orderflow.git
+git clone https://github.com/azim-haffar/orderflow.git
 cd orderflow
 docker compose up --build
 ```
@@ -121,7 +121,7 @@ OrderFlow demonstriert ein event-getriebenes Microservice-Muster im Vollstack-Ko
 Voraussetzungen: Docker Desktop, Docker Compose v2
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/orderflow.git
+git clone https://github.com/azim-haffar/orderflow.git
 cd orderflow
 docker compose up --build
 ```
