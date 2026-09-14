@@ -1,200 +1,618 @@
-# OrderFlow
+<div align="center">
 
-![CI](https://github.com/azim-haffar/orderflow/actions/workflows/ci.yml/badge.svg)
-![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2-6DB33F?style=flat-square&logo=springboot&logoColor=white)
-![Kafka](https://img.shields.io/badge/Kafka-KRaft-231F20?style=flat-square&logo=apachekafka&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
+# 🤖 HireLens
 
-A production-grade, event-driven order processing system built with Spring Boot 3, Kafka KRaft, PostgreSQL, Redis, and React 18.
+### AI-Powered Recruitment & Job Application Platform
 
-[English](#english) · [Deutsch](#deutsch)
+**CV analysis · Job matching · ATS auditing · Interview preparation · Application tracking**
+
+<p>
+  <a href="https://hirelens-alpha.vercel.app">
+    <img src="https://img.shields.io/badge/Live_Demo-2563EB?style=for-the-badge&logo=vercel&logoColor=white" />
+  </a>
+  <a href="https://github.com/azim-haffar/HireLens">
+    <img src="https://img.shields.io/badge/Repository-181717?style=for-the-badge&logo=github&logoColor=white" />
+  </a>
+</p>
+
+<p>
+  <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/FastAPI-0.111-009688?style=flat-square&logo=fastapi&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=111827" />
+  <img src="https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite&logoColor=white" />
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase&logoColor=white" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/License-MIT-16A34A?style=flat-square" />
+</p>
+
+</div>
 
 ---
 
-## English
+## Overview
 
-### What it is
+**HireLens** is a full-stack recruitment platform that helps job seekers understand how well their CV matches a specific vacancy and what they can improve.
 
-OrderFlow is a full-stack demonstration of an event-driven microservice pattern: a React frontend places orders via REST, Spring Boot persists them to PostgreSQL and publishes events to Kafka, and an inventory consumer processes each event under a pessimistic database lock before resolving the order as CONFIRMED or CANCELLED. Redis caches the product catalogue with a 60-second TTL. The entire stack runs from a single `docker compose up --build`.
+Users can upload a PDF CV, paste or ingest a job posting, and receive structured analysis across skills, experience, education, and keyword coverage.
 
-![Overview dashboard](docs/screenshots/overview.png)
+The platform also includes:
 
-### Quick Start
+- AI-powered match scoring
+- ATS auditing
+- CV comparison
+- interview preparation
+- cover-letter generation
+- application tracking
+- analysis history
+- multilingual support
+- contextual AI chat
 
-Prerequisites: Docker Desktop, Docker Compose v2
+The application combines a **React frontend**, **FastAPI backend**, **Supabase**, **Redis**, and **Groq-hosted LLMs**, with deployment through **Vercel and Render**.
 
-```bash
-git clone https://github.com/azim-haffar/orderflow.git
-cd orderflow
-docker compose up --build
+---
+
+## 📸 Screenshots
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### Landing
+
+<img src="screenshots/landing.png" alt="HireLens landing page" />
+
+</td>
+<td width="50%" valign="top">
+
+### Dashboard
+
+<img src="screenshots/dashboard.png" alt="HireLens dashboard" />
+
+</td>
+</tr>
+
+<tr>
+<td width="50%" valign="top">
+
+### Job Analysis
+
+<img src="screenshots/analysis.png" alt="HireLens CV and job analysis" />
+
+</td>
+<td width="50%" valign="top">
+
+### ATS Checker
+
+<img src="screenshots/ats-checker.png" alt="HireLens ATS checker" />
+
+</td>
+</tr>
+</table>
+
+<div align="center">
+
+### Roast My CV
+
+<img src="screenshots/roast.png" width="80%" alt="HireLens Roast My CV page" />
+
+</div>
+
+---
+
+## ✨ Core Features
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 📄 CV & Job Analysis
+
+- PDF CV upload and parsing
+- Job description ingestion
+- Job URL scraping
+- Structured CV/job extraction
+- Weighted match scoring
+- Skills and keyword coverage
+- Education and experience analysis
+
+</td>
+<td width="50%" valign="top">
+
+### 🎯 Application Support
+
+- ATS compliance audit
+- Role-specific interview questions
+- STAR answer frameworks
+- Tailored cover-letter generation
+- CV-to-CV comparison
+- Analysis history and trends
+
+</td>
+</tr>
+
+<tr>
+<td width="50%" valign="top">
+
+### 📋 Job Tracking
+
+- Drag-and-drop Kanban board
+- Saved
+- Applied
+- Interview
+- Offer
+- Rejected
+- Ghosted
+
+</td>
+<td width="50%" valign="top">
+
+### 🤖 AI Features
+
+- SSE-streamed explanations
+- Contextual AI chat
+- Public CV feedback endpoint
+- Multi-model fallback chain
+- Structured LLM outputs
+- Rate-limited public features
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🧠 Match Scoring
+
+HireLens calculates a weighted job-match score using four categories:
+
+| Category | Weight |
+|---|---:|
+| Skills | **35%** |
+| Experience | **25%** |
+| Education | **15%** |
+| Keywords | **25%** |
+
+The score is accompanied by a detailed AI-generated explanation streamed to the frontend using **Server-Sent Events (SSE)**.
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart LR
+
+    U[User]
+
+    subgraph Frontend
+        R[React 18]
+        V[Vite]
+        T[Tailwind CSS]
+    end
+
+    subgraph Backend
+        F[FastAPI]
+        P[PDF Parsing]
+        S[Job Scraping]
+        RL[Rate Limiting]
+    end
+
+    subgraph Data
+        SB[(Supabase PostgreSQL)]
+        AU[Supabase Auth]
+        RD[(Redis)]
+    end
+
+    subgraph AI
+        G[Groq API]
+        M1[LLaMA 3.3 70B]
+        M2[LLaMA 3 8B]
+        M3[LLaMA 3.1 8B]
+    end
+
+    U --> R
+    R -->|HTTP / SSE| F
+
+    F --> P
+    F --> S
+    F --> RL
+
+    F --> SB
+    F --> AU
+    F --> RD
+
+    F --> G
+
+    G --> M1
+    M1 -. fallback .-> M2
+    M2 -. fallback .-> M3
 ```
 
-| Service   | URL                        |
-| --------- | -------------------------- |
-| Frontend  | localhost:5173             |
-| Backend   | localhost:8080             |
-| Postgres  | localhost:5432 (orderflow) |
-| Redis     | localhost:6379             |
-| Kafka     | localhost:9092             |
-
-### Architecture
+### Request flow
 
 ```text
-  React (Vite + nginx)
-         |
-         | HTTP/REST
-         v
-  Spring Boot 3
-  +-----------------------+
-  | ProductController     |  <---> Redis (60s TTL cache)
-  | OrderController       |  ---> PostgreSQL (JPA + Flyway)
-  |                       |  ---> Kafka topic: order-events
-  +-----------------------+
-         |
-         | Kafka consumer
-         v
-  InventoryService
-  (SELECT FOR UPDATE)
-         |
-         v
-  PostgreSQL
-  Order status: CONFIRMED / CANCELLED
+User
+  │
+  ▼
+React / Vite
+  │
+  ├── REST requests
+  └── SSE streams
+  │
+  ▼
+FastAPI
+  │
+  ├── CV parsing
+  ├── Job ingestion
+  ├── ATS analysis
+  ├── Match scoring
+  ├── Interview preparation
+  └── AI chat
+  │
+  ├──────────────► Supabase
+  │                 PostgreSQL
+  │                 Auth / RLS
+  │
+  ├──────────────► Redis
+  │                 Cache / rate limiting
+  │
+  └──────────────► Groq API
+                    LLM inference
 ```
-
-Order lifecycle: POST /api/orders → DB save → Kafka publish → consumer acquires row lock → stock check → CONFIRMED / CANCELLED
-
-Client cancellation: DELETE /api/orders/{id} → status guard (PLACED only) → CANCELLED (204) · already CONFIRMED/CANCELLED → 409
-
-![Kafka event log](docs/screenshots/events.png)
-
-### Engineering Decisions
-
-| Decision | Rationale |
-| -------- | --------- |
-| **DB save before Kafka publish** | Guarantees the row exists before the consumer processes the event. Publishing first risks a consumer reading an order ID that is not yet visible to other transactions. |
-| **Pessimistic locking (SELECT FOR UPDATE)** | Eliminates oversell under concurrent load without retry storms. Optimistic locking collapses under high contention; pessimistic locking is the correct default for inventory. |
-| **Direct CacheManager injection instead of @Cacheable** | Spring AOP cannot intercept self-invocation within the same bean, so @Cacheable on internal methods silently bypasses the cache. Direct injection removes the proxy dependency entirely. |
-| **Kafka KRaft, no Zookeeper** | Reduces operational surface area. KRaft has been production-stable since Kafka 3.3 and removes an entire coordination layer from the deployment. |
-| **Denormalized productName on OrderItem** | Preserves historical accuracy. A product rename must not silently rewrite what a customer ordered; the name is captured at order time. |
-| **No @Data on JPA entities** | Lombok @Data generates equals/hashCode over all fields. On Hibernate-managed proxies this causes recursive loops and LazyInitializationException under association traversal. |
-| **Testcontainers for integration tests** | Tests run against real PostgreSQL, Kafka, and Redis instances. No mocks means no mock/production divergence and no false-positive test suites. |
-| **Transactional Outbox Pattern** | Direct Kafka publish inside a DB transaction creates a dual-write problem — if Kafka is down, the order is saved but the event is lost. The outbox table commits atomically with the order row; a poller retries until Kafka acknowledges. |
-| **RFC 7807 ProblemDetail** | Gives API consumers a machine-readable, standardised error envelope. Raw HTTP status codes alone are insufficient for programmatic error handling. |
-| **DELETE cancels PLACED orders only** | An order that has already reached CONFIRMED or CANCELLED has been processed by the inventory consumer; mutating it after the fact would create stock and audit inconsistencies. The status guard enforces this invariant and returns 409 for any other state. |
-
-### API Reference
-
-| Method | Path                  | Description                          | Body                                   |
-| ------ | --------------------- | ------------------------------------ | -------------------------------------- |
-| GET    | `/api/products`       | List all products with current stock | —                                      |
-| GET    | `/api/products/{id}`  | Single product by ID                 | —                                      |
-| POST   | `/api/orders`         | Place a new order                    | `{ productId, quantity, customerId }`  |
-| GET    | `/api/orders/{id}`    | Poll order status                    | —                                      |
-| GET    | `/api/orders`         | Last 20 orders                       | —                                      |
-| DELETE | `/api/orders/{id}`    | Cancel order (PLACED status only)    | —                                      |
-
-Error codes: `400` Validation failed · `404` Order or product not found · `409` Insufficient stock / order not cancellable
-
-![Orders view](docs/screenshots/orders.png)
-
-### Tech Stack
-
-| Layer          | Technology                                |
-| -------------- | ----------------------------------------- |
-| Backend        | Java 21, Spring Boot 3.2, Spring Kafka    |
-| ORM            | Spring Data JPA, Hibernate 6, Flyway      |
-| Database       | PostgreSQL 15                             |
-| Cache          | Redis 7, Spring Cache                     |
-| Messaging      | Apache Kafka 7.5 (KRaft, no Zookeeper)    |
-| Frontend       | React 18, Vite 5, plain CSS               |
-| Testing        | JUnit 5, Testcontainers, Awaitility       |
-| Infrastructure | Docker Compose, nginx                     |
-
-### Running Tests
-
-```bash
-# Backend integration tests (requires Docker)
-cd backend
-mvn verify
-
-# Frontend build validation
-cd frontend
-npm ci && npm run build
-```
-
-Tests spin up PostgreSQL 15, Kafka (Confluent 7.5), and Redis 7 automatically via Testcontainers. No manual setup required.
 
 ---
 
-## Deutsch
+## 🛠️ Tech Stack
 
-### Was es ist
-
-OrderFlow demonstriert ein event-getriebenes Microservice-Muster im Vollstack-Kontext: Ein React-Frontend sendet Bestellungen per REST, Spring Boot persistiert sie in PostgreSQL und publiziert Events nach Kafka. Ein Inventory-Consumer verarbeitet jeden Event unter pessimistischem Datenbank-Lock und setzt den Bestellstatus auf CONFIRMED oder CANCELLED. Redis cached den Produktkatalog mit 60 Sekunden TTL. Der gesamte Stack startet mit einem einzigen `docker compose up --build`.
-
-### Schnellstart
-
-Voraussetzungen: Docker Desktop, Docker Compose v2
-
-```bash
-git clone https://github.com/azim-haffar/orderflow.git
-cd orderflow
-docker compose up --build
-```
-
-| Service   | URL                        |
-| --------- | -------------------------- |
-| Frontend  | localhost:5173             |
-| Backend   | localhost:8080             |
-| Postgres  | localhost:5432 (orderflow) |
-| Redis     | localhost:6379             |
-| Kafka     | localhost:9092             |
-
-### Engineering-Entscheidungen
-
-| Entscheidung | Begründung |
-| ------------ | ---------- |
-| **DB-Save vor Kafka-Publish** | Stellt sicher, dass die Zeile existiert, bevor der Consumer das Event verarbeitet. Ein vorzeitiges Publish riskiert, dass der Consumer eine Order-ID liest, die in anderen Transaktionen noch nicht sichtbar ist. |
-| **Pessimistisches Locking (SELECT FOR UPDATE)** | Verhindert Überverkäufe unter Concurrent Load ohne Retry-Stürme. Optimistic Locking versagt bei hoher Contention; pessimistisches Locking ist die korrekte Wahl für Bestandsverwaltung. |
-| **Direkte CacheManager-Injektion statt @Cacheable** | Spring AOP kann Self-Invocation innerhalb derselben Bean nicht abfangen, weshalb @Cacheable an internen Methoden den Cache stillschweigend umgeht. Die direkte Injektion eliminiert die Proxy-Abhängigkeit vollständig. |
-| **Kafka KRaft, kein Zookeeper** | Reduziert die operative Komplexität. KRaft ist seit Kafka 3.3 produktionsstabil und entfernt eine gesamte Koordinationsschicht aus dem Deployment. |
-| **Denormalisierter productName in OrderItem** | Sichert historische Korrektheit. Eine spätere Produktumbenennung darf nicht stillschweigend umschreiben, was ein Kunde bestellt hat; der Name wird zum Bestellzeitpunkt fixiert. |
-| **Keine @Data auf JPA-Entitäten** | Lomboks @Data generiert equals/hashCode über alle Felder. Auf Hibernate-Proxies führt das zu rekursiven Schleifen und LazyInitializationException beim Traversieren von Assoziationen. |
-| **Testcontainers für Integrationstests** | Tests laufen gegen echte PostgreSQL-, Kafka- und Redis-Instanzen. Keine Mocks bedeutet keine Mock/Prod-Divergenz und keine falsch-positiven Testsuiten. |
-| **RFC 7807 ProblemDetail** | Liefert API-Clients ein maschinell lesbares, standardisiertes Fehlerformat. Rohe HTTP-Statuscodes allein reichen für programmatische Fehlerbehandlung nicht aus. |
-| **DELETE storniert nur Bestellungen im Status PLACED** | Eine Bestellung, die bereits CONFIRMED oder CANCELLED erreicht hat, wurde vom Inventory-Consumer verarbeitet. Eine nachträgliche Mutation würde Bestand und Audit-Log inkonsistent machen. Der Status-Guard erzwingt diese Invariante und gibt für jeden anderen Zustand 409 zurück. |
-
-### Tests ausführen
-
-```bash
-# Backend Integrationstests (benötigt Docker)
-cd backend
-mvn verify
-
-# Frontend Build-Validierung
-cd frontend
-npm ci && npm run build
-```
-
-Die Tests starten PostgreSQL 15, Kafka (Confluent 7.5) und Redis 7 automatisch via Testcontainers. Kein manuelles Setup erforderlich.
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 18, Vite, Tailwind CSS, react-i18next, Recharts, @dnd-kit |
+| **Backend** | Python 3.11, FastAPI, SlowAPI, pdfplumber, BeautifulSoup4 |
+| **AI** | Groq API, LLaMA models |
+| **Database** | Supabase / PostgreSQL |
+| **Authentication** | Supabase Auth, Google OAuth |
+| **Security / Data** | Row-Level Security |
+| **Cache / Rate Limit** | Redis |
+| **Streaming** | Server-Sent Events |
+| **Deployment** | Vercel, Render |
+| **Local Infrastructure** | Docker Compose |
 
 ---
 
-### Projektstruktur
+## ⚙️ Engineering Highlights
+
+### Real-Time AI Streaming
+
+Long-form AI responses are streamed from the FastAPI backend to the frontend using **SSE**, allowing explanations and AI chat responses to appear progressively instead of waiting for the full model response.
+
+### Supabase Authentication & RLS
+
+Authentication is handled through **Supabase**, supporting:
+
+- email/password authentication
+- Google OAuth
+- PostgreSQL persistence
+- Row-Level Security
+
+### Public Rate-Limited Endpoint
+
+The public **Roast My CV** feature works without authentication while using rate limiting to reduce abuse.
 
 ```text
-orderflow/
-├── backend/            Java 21 / Spring Boot 3 application
-│   ├── src/main/       Production source
-│   └── src/test/       Testcontainers integration tests
-├── frontend/           React 18 + Vite SPA
-├── docker-compose.yml  Single command for all services
-└── .github/workflows/  CI pipeline (GitHub Actions)
+3 requests / hour / IP
+```
+
+### Application Tracker
+
+The tracker uses a drag-and-drop Kanban interface:
+
+```text
+Saved
+  ↓
+Applied
+  ↓
+Interview
+  ↓
+Offer
+
+Rejected / Ghosted
+```
+
+### Multilingual Interface
+
+HireLens currently supports:
+
+`English` · `German` · `Spanish` · `Danish` · `Turkish`
+
+using `react-i18next`.
+
+---
+
+## 🤖 AI Model Fallback
+
+The backend uses a fallback chain so the application can switch models if the preferred option is unavailable.
+
+```text
+llama-3.3-70b-versatile
+          │
+          ▼
+    llama3-8b-8192
+          │
+          ▼
+ llama-3.1-8b-instant
+```
+
+| Priority | Model | Role |
+|---|---|---|
+| 1 | `llama-3.3-70b-versatile` | Primary |
+| 2 | `llama3-8b-8192` | Fallback |
+| 3 | `llama-3.1-8b-instant` | Final fallback |
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+You need:
+
+- Node.js 18+
+- Python 3.11+
+- Docker + Docker Compose
+- Supabase project
+- Groq API key
+
+---
+
+### Option 1 — Docker Compose
+
+```bash
+git clone https://github.com/azim-haffar/HireLens.git
+cd HireLens
+```
+
+Configure environment variables:
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+Add your credentials to the `.env` files.
+
+Then start the application:
+
+```bash
+docker-compose up --build
+```
+
+### Local services
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8001 |
+| Swagger / API Docs | http://localhost:8001/docs |
+
+---
+
+### Option 2 — Local Development
+
+#### Backend
+
+```bash
+cd backend
+
+python -m venv venv
+source venv/bin/activate
+
+# Windows
+# venv\Scripts\activate
+
+pip install -r requirements.txt
+
+uvicorn app.main:app --reload
+```
+
+#### Frontend
+
+```bash
+cd frontend
+
+npm install
+npm run dev
 ```
 
 ---
 
-Built by Azim Haffar · azimx.dev · linkedin.com/in/azim-haffar
+## 🗄️ Supabase Setup
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Open the SQL Editor.
+3. Run:
+
+```text
+supabase/migrations.sql
+```
+
+4. Enable Google OAuth under:
+
+```text
+Authentication
+    ↓
+Providers
+    ↓
+Google
+```
+
+5. Add the project URL and API keys to the backend and frontend environment files.
+
+---
+
+## 🔐 Environment Variables
+
+### Backend
+
+`backend/.env`
+
+| Variable | Purpose |
+|---|---|
+| `GROQ_API_KEY` | Groq API access |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Public Supabase API key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side Supabase key |
+| `RESEND_API_KEY` | Transactional email |
+| `REDIS_URL` | Redis connection |
+| `ENVIRONMENT` | Development / production mode |
+
+### Frontend
+
+`frontend/.env`
+
+| Variable | Purpose |
+|---|---|
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Public Supabase key |
+| `VITE_API_URL` | Backend API URL |
+
+> Never commit production API keys or service-role credentials.
+
+---
+
+## 🌐 Deployment
+
+### Frontend — Vercel
+
+```bash
+vercel --cwd frontend
+```
+
+Configure the `VITE_*` environment variables inside the Vercel project.
+
+### Backend — Render
+
+The backend can be deployed through the included `render.yaml` configuration.
+
+Manual configuration:
+
+```text
+Build:
+pip install -r requirements.txt
+
+Start:
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+---
+
+## 🔌 API
+
+Interactive API documentation is available through FastAPI at:
+
+```text
+/docs
+```
+
+when the backend is running.
+
+### Main endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/cv/upload` | Upload and parse CV |
+| `POST` | `/jobs/ingest` | Ingest job posting |
+| `POST` | `/match/score` | Generate match score |
+| `POST` | `/ats/check` | Run ATS audit |
+| `POST` | `/explain/stream` | Stream score explanation |
+| `POST` | `/interview/generate` | Generate interview preparation |
+| `POST` | `/cover-letter/generate` | Generate cover letter |
+| `POST` | `/comparison/compare` | Compare CV versions |
+| `GET` | `/tracker/applications` | Retrieve applications |
+| `POST` | `/roast/cv` | Public CV feedback |
+| `POST` | `/chat/stream` | Context-aware AI chat |
+
+---
+
+## 📁 Project Structure
+
+```text
+HireLens/
+│
+├── backend/
+│   ├── app/
+│   │   ├── routers/
+│   │   │   ├── cv
+│   │   │   ├── jobs
+│   │   │   ├── match
+│   │   │   ├── ats
+│   │   │   └── ...
+│   │   │
+│   │   ├── services/
+│   │   │   ├── CV parsing
+│   │   │   ├── Job scraping
+│   │   │   └── Groq client
+│   │   │
+│   │   ├── models/
+│   │   └── main.py
+│   │
+│   ├── requirements.txt
+│   └── Dockerfile
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── hooks/
+│   │   ├── lib/
+│   │   └── locales/
+│   │
+│   └── public/
+│
+├── supabase/
+│   └── migrations.sql
+│
+└── docker-compose.yml
+```
+
+---
+
+## 🎬 Demo
+
+<div align="center">
+
+### Try HireLens
+
+<a href="https://hirelens-alpha.vercel.app">
+  <img src="https://img.shields.io/badge/Open_Live_Demo-2563EB?style=for-the-badge&logo=vercel&logoColor=white" />
+</a>
+
+</div>
+
+---
+
+## 📄 License
+
+Distributed under the **MIT License**.
+
+See [`LICENSE`](LICENSE) for details.
+
+---
+
+<div align="center">
+
+### Built by Azim Haffar
+
+Backend · AI Integration · Full-Stack Engineering
+
+<a href="https://azimx.dev">
+  <img src="https://img.shields.io/badge/Portfolio-111827?style=for-the-badge&logo=vercel&logoColor=white" />
+</a>
+
+<a href="https://www.linkedin.com/in/azim-haffar">
+  <img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" />
+</a>
+
+<a href="https://github.com/azim-haffar">
+  <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" />
+</a>
+
+</div>
