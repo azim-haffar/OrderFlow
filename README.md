@@ -1,178 +1,92 @@
 <div align="center">
 
-# 🤖 HireLens
+# ⚡ OrderFlow
 
-### AI-Powered Recruitment & Job Application Platform
+### Event-Driven Order Processing System
 
-**CV analysis · Job matching · ATS auditing · Interview preparation · Application tracking**
+**Spring Boot · Kafka · PostgreSQL · Redis · Docker · Testcontainers**
 
 <p>
-  <a href="https://hirelens-alpha.vercel.app">
-    <img src="https://img.shields.io/badge/Live_Demo-2563EB?style=for-the-badge&logo=vercel&logoColor=white" />
+  <a href="https://github.com/azim-haffar/OrderFlow/actions">
+    <img src="https://github.com/azim-haffar/OrderFlow/actions/workflows/ci.yml/badge.svg" />
   </a>
-  <a href="https://github.com/azim-haffar/HireLens">
+  <a href="https://github.com/azim-haffar/OrderFlow">
     <img src="https://img.shields.io/badge/Repository-181717?style=for-the-badge&logo=github&logoColor=white" />
   </a>
 </p>
 
 <p>
-  <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/FastAPI-0.111-009688?style=flat-square&logo=fastapi&logoColor=white" />
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=111827" />
-  <img src="https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite&logoColor=white" />
-  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase&logoColor=white" />
+  <img src="https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white" />
+  <img src="https://img.shields.io/badge/Spring_Boot-3.2-6DB33F?style=flat-square&logo=springboot&logoColor=white" />
+  <img src="https://img.shields.io/badge/Kafka-KRaft-231F20?style=flat-square&logo=apachekafka&logoColor=white" />
+  <img src="https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat-square&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white" />
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" />
-  <img src="https://img.shields.io/badge/License-MIT-16A34A?style=flat-square" />
 </p>
+
+**[English](#english) · [Deutsch](#deutsch)**
 
 </div>
 
 ---
+
+# English
 
 ## Overview
 
-**HireLens** is a full-stack recruitment platform that helps job seekers understand how well their CV matches a specific vacancy and what they can improve.
+**OrderFlow** is a full-stack, event-driven order-processing system built to demonstrate reliable backend patterns around messaging, concurrency, persistence, caching, and integration testing.
 
-Users can upload a PDF CV, paste or ingest a job posting, and receive structured analysis across skills, experience, education, and keyword coverage.
+A React client submits orders through a REST API. The Spring Boot backend persists application state in PostgreSQL, records events through a **transactional outbox**, and publishes them to **Apache Kafka**. An inventory consumer processes order events while using **pessimistic database locking** to protect stock under concurrent access.
 
-The platform also includes:
+Redis provides a short-lived product cache, while the complete local system runs through Docker Compose.
 
-- AI-powered match scoring
-- ATS auditing
-- CV comparison
-- interview preparation
-- cover-letter generation
-- application tracking
-- analysis history
-- multilingual support
-- contextual AI chat
+### Core engineering problems demonstrated
 
-The application combines a **React frontend**, **FastAPI backend**, **Supabase**, **Redis**, and **Groq-hosted LLMs**, with deployment through **Vercel and Render**.
+- asynchronous event processing
+- transactional consistency
+- Kafka messaging
+- transactional outbox
+- concurrency control
+- pessimistic locking
+- PostgreSQL persistence
+- Redis caching
+- integration testing with real infrastructure
+- standardized API error handling
+- containerized development
 
 ---
 
-## 📸 Screenshots
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### Landing
-
-<img src="screenshots/landing.png" alt="HireLens landing page" />
-
-</td>
-<td width="50%" valign="top">
-
-### Dashboard
-
-<img src="screenshots/dashboard.png" alt="HireLens dashboard" />
-
-</td>
-</tr>
-
-<tr>
-<td width="50%" valign="top">
-
-### Job Analysis
-
-<img src="screenshots/analysis.png" alt="HireLens CV and job analysis" />
-
-</td>
-<td width="50%" valign="top">
-
-### ATS Checker
-
-<img src="screenshots/ats-checker.png" alt="HireLens ATS checker" />
-
-</td>
-</tr>
-</table>
+## 📸 Preview
 
 <div align="center">
 
-### Roast My CV
+### Dashboard
 
-<img src="screenshots/roast.png" width="80%" alt="HireLens Roast My CV page" />
+<img src="docs/screenshots/overview.png" width="90%" alt="OrderFlow dashboard" />
 
 </div>
 
----
-
-## ✨ Core Features
+<br>
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-### 📄 CV & Job Analysis
+### Kafka Events
 
-- PDF CV upload and parsing
-- Job description ingestion
-- Job URL scraping
-- Structured CV/job extraction
-- Weighted match scoring
-- Skills and keyword coverage
-- Education and experience analysis
+<img src="docs/screenshots/events.png" alt="OrderFlow Kafka event log" />
 
 </td>
+
 <td width="50%" valign="top">
 
-### 🎯 Application Support
+### Orders
 
-- ATS compliance audit
-- Role-specific interview questions
-- STAR answer frameworks
-- Tailored cover-letter generation
-- CV-to-CV comparison
-- Analysis history and trends
-
-</td>
-</tr>
-
-<tr>
-<td width="50%" valign="top">
-
-### 📋 Job Tracking
-
-- Drag-and-drop Kanban board
-- Saved
-- Applied
-- Interview
-- Offer
-- Rejected
-- Ghosted
-
-</td>
-<td width="50%" valign="top">
-
-### 🤖 AI Features
-
-- SSE-streamed explanations
-- Contextual AI chat
-- Public CV feedback endpoint
-- Multi-model fallback chain
-- Structured LLM outputs
-- Rate-limited public features
+<img src="docs/screenshots/orders.png" alt="OrderFlow orders view" />
 
 </td>
 </tr>
 </table>
-
----
-
-## 🧠 Match Scoring
-
-HireLens calculates a weighted job-match score using four categories:
-
-| Category | Weight |
-|---|---:|
-| Skills | **35%** |
-| Experience | **25%** |
-| Education | **15%** |
-| Keywords | **25%** |
-
-The score is accompanied by a detailed AI-generated explanation streamed to the frontend using **Server-Sent Events (SSE)**.
 
 ---
 
@@ -184,424 +98,556 @@ flowchart LR
     U[User]
 
     subgraph Frontend
-        R[React 18]
-        V[Vite]
-        T[Tailwind CSS]
+        R[React + Vite]
+        N[nginx]
     end
 
     subgraph Backend
-        F[FastAPI]
-        P[PDF Parsing]
-        S[Job Scraping]
-        RL[Rate Limiting]
+        API[Spring Boot REST API]
+        PS[Product Service]
+        OS[Order Service]
+        OP[Outbox Publisher]
+        INV[Inventory Consumer]
     end
 
     subgraph Data
-        SB[(Supabase PostgreSQL)]
-        AU[Supabase Auth]
+        PG[(PostgreSQL)]
         RD[(Redis)]
+        OB[(Outbox Table)]
     end
 
-    subgraph AI
-        G[Groq API]
-        M1[LLaMA 3.3 70B]
-        M2[LLaMA 3 8B]
-        M3[LLaMA 3.1 8B]
-    end
+    K[(Apache Kafka)]
 
     U --> R
-    R -->|HTTP / SSE| F
+    R --> N
+    N -->|HTTP / REST| API
 
-    F --> P
-    F --> S
-    F --> RL
+    API --> PS
+    API --> OS
 
-    F --> SB
-    F --> AU
-    F --> RD
+    PS <--> RD
+    PS --> PG
 
-    F --> G
+    OS --> PG
+    OS --> OB
 
-    G --> M1
-    M1 -. fallback .-> M2
-    M2 -. fallback .-> M3
+    OB --> OP
+    OP --> K
+
+    K --> INV
+    INV -->|SELECT FOR UPDATE| PG
 ```
 
-### Request flow
+### Order lifecycle
 
 ```text
-User
-  │
-  ▼
-React / Vite
-  │
-  ├── REST requests
-  └── SSE streams
-  │
-  ▼
-FastAPI
-  │
-  ├── CV parsing
-  ├── Job ingestion
-  ├── ATS analysis
-  ├── Match scoring
-  ├── Interview preparation
-  └── AI chat
-  │
-  ├──────────────► Supabase
-  │                 PostgreSQL
-  │                 Auth / RLS
-  │
-  ├──────────────► Redis
-  │                 Cache / rate limiting
-  │
-  └──────────────► Groq API
-                    LLM inference
+POST /api/orders
+        │
+        ▼
+Validate request
+        │
+        ▼
+Persist order
+        │
+        ├────────────► PostgreSQL
+        │
+        ▼
+Create outbox event
+        │
+        ▼
+Commit transaction
+        │
+        ▼
+Outbox publisher
+        │
+        ▼
+Apache Kafka
+        │
+        ▼
+Inventory consumer
+        │
+        ▼
+SELECT ... FOR UPDATE
+        │
+        ▼
+Check stock
+     ┌──┴──┐
+     ▼     ▼
+CONFIRMED  CANCELLED
+```
+
+### Cancellation flow
+
+```text
+DELETE /api/orders/{id}
+        │
+        ▼
+Check current status
+        │
+   ┌────┴────┐
+   │         │
+PLACED     Other
+   │         │
+   ▼         ▼
+CANCELLED   409 Conflict
+```
+
+---
+
+## ⚙️ Engineering Decisions
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🔒 Pessimistic Locking
+
+Inventory updates use:
+
+```sql
+SELECT ... FOR UPDATE
+```
+
+This prevents concurrent consumers from overselling the same stock.
+
+The database row is locked while inventory is checked and updated.
+
+</td>
+
+<td width="50%" valign="top">
+
+### 📬 Transactional Outbox
+
+The order and its outbound event are committed atomically.
+
+```text
+Order transaction
+      │
+      ├── Order row
+      └── Outbox row
+```
+
+A publisher then forwards pending events to Kafka and can retry delivery if Kafka is temporarily unavailable.
+
+</td>
+</tr>
+
+<tr>
+<td width="50%" valign="top">
+
+### ⚡ Redis Cache
+
+Product catalogue data is cached in Redis with a:
+
+```text
+60-second TTL
+```
+
+The implementation uses direct `CacheManager` access rather than relying on internal `@Cacheable` self-invocation.
+
+</td>
+
+<td width="50%" valign="top">
+
+### 🧪 Real Integration Tests
+
+Tests use **Testcontainers** to start real:
+
+- PostgreSQL
+- Kafka
+- Redis
+
+This keeps infrastructure-facing tests close to the actual runtime environment instead of replacing those dependencies with mocks.
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🧠 Additional Design Decisions
+
+| Decision | Why |
+|---|---|
+| **Kafka KRaft** | Removes the need for a separate ZooKeeper coordination layer |
+| **Transactional outbox** | Prevents a database/Kafka dual-write failure window |
+| **Pessimistic locking** | Protects inventory under concurrent order processing |
+| **Redis caching** | Reduces repeated product catalogue reads |
+| **Denormalized `productName`** | Preserves the product name associated with the order at creation time |
+| **No Lombok `@Data` on JPA entities** | Avoids problematic generated equality/hash behaviour across Hibernate associations and proxies |
+| **RFC 7807 `ProblemDetail`** | Provides standardized machine-readable API errors |
+| **Status-guarded cancellation** | Prevents already-processed orders from being modified inconsistently |
+| **Testcontainers** | Exercises PostgreSQL, Kafka, and Redis through real containerized services |
+
+---
+
+## 🔄 Event-Driven Processing
+
+The main asynchronous flow is:
+
+```text
+REST Request
+     │
+     ▼
+Spring Boot
+     │
+     ▼
+PostgreSQL
+ + Outbox
+     │
+     ▼
+Kafka
+     │
+     ▼
+Inventory Consumer
+     │
+     ▼
+Database Lock
+     │
+     ▼
+Stock Update
+     │
+     ▼
+Order Status
+```
+
+Possible order states include:
+
+```text
+PLACED → CONFIRMED
+   │
+   └────→ CANCELLED
+```
+
+---
+
+## 🌐 API
+
+### Products
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/products` | Retrieve products and current stock |
+| `GET` | `/api/products/{id}` | Retrieve one product |
+
+### Orders
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/orders` | Create an order |
+| `GET` | `/api/orders/{id}` | Retrieve order status |
+| `GET` | `/api/orders` | Retrieve recent orders |
+| `DELETE` | `/api/orders/{id}` | Cancel a `PLACED` order |
+
+### Example order
+
+```json
+{
+  "productId": 1,
+  "quantity": 2,
+  "customerId": "customer-123"
+}
+```
+
+### Error responses
+
+The API uses standardized **RFC 7807 Problem Details**.
+
+Typical status codes:
+
+```text
+400  Validation failure
+404  Order / product not found
+409  Insufficient stock or invalid order state
 ```
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | React 18, Vite, Tailwind CSS, react-i18next, Recharts, @dnd-kit |
-| **Backend** | Python 3.11, FastAPI, SlowAPI, pdfplumber, BeautifulSoup4 |
-| **AI** | Groq API, LLaMA models |
-| **Database** | Supabase / PostgreSQL |
-| **Authentication** | Supabase Auth, Google OAuth |
-| **Security / Data** | Row-Level Security |
-| **Cache / Rate Limit** | Redis |
-| **Streaming** | Server-Sent Events |
-| **Deployment** | Vercel, Render |
-| **Local Infrastructure** | Docker Compose |
+<div align="center">
+
+### Backend
+
+<img src="https://skillicons.dev/icons?i=java,spring" />
+
+<br>
+
+`Java 21` · `Spring Boot 3.2` · `Spring Kafka`
+
+<br><br>
+
+### Data
+
+<img src="https://skillicons.dev/icons?i=postgres,redis" />
+
+<br>
+
+`PostgreSQL 15` · `Redis 7` · `Spring Data JPA` · `Hibernate 6` · `Flyway`
+
+<br><br>
+
+### Messaging
+
+<img src="https://skillicons.dev/icons?i=kafka" />
+
+<br>
+
+`Apache Kafka` · `KRaft`
+
+<br><br>
+
+### Frontend
+
+<img src="https://skillicons.dev/icons?i=react,vite" />
+
+<br>
+
+`React 18` · `Vite 5`
+
+<br><br>
+
+### Testing & Infrastructure
+
+<img src="https://skillicons.dev/icons?i=docker,githubactions" />
+
+<br>
+
+`JUnit 5` · `Testcontainers` · `Awaitility` · `Docker Compose` · `nginx`
+
+</div>
 
 ---
 
-## ⚙️ Engineering Highlights
+## 🧪 Testing
 
-### Real-Time AI Streaming
+The backend integration tests run against real containerized infrastructure using **Testcontainers**.
 
-Long-form AI responses are streamed from the FastAPI backend to the frontend using **SSE**, allowing explanations and AI chat responses to appear progressively instead of waiting for the full model response.
+### Run backend tests
 
-### Supabase Authentication & RLS
-
-Authentication is handled through **Supabase**, supporting:
-
-- email/password authentication
-- Google OAuth
-- PostgreSQL persistence
-- Row-Level Security
-
-### Public Rate-Limited Endpoint
-
-The public **Roast My CV** feature works without authentication while using rate limiting to reduce abuse.
-
-```text
-3 requests / hour / IP
+```bash
+cd backend
+mvn verify
 ```
 
-### Application Tracker
-
-The tracker uses a drag-and-drop Kanban interface:
+Testcontainers automatically starts:
 
 ```text
-Saved
-  ↓
-Applied
-  ↓
-Interview
-  ↓
-Offer
-
-Rejected / Ghosted
+PostgreSQL 15
+Apache Kafka
+Redis 7
 ```
 
-### Multilingual Interface
+No manual database, Kafka, or Redis setup is required.
 
-HireLens currently supports:
+### Validate the frontend
 
-`English` · `German` · `Spanish` · `Danish` · `Turkish`
-
-using `react-i18next`.
-
----
-
-## 🤖 AI Model Fallback
-
-The backend uses a fallback chain so the application can switch models if the preferred option is unavailable.
-
-```text
-llama-3.3-70b-versatile
-          │
-          ▼
-    llama3-8b-8192
-          │
-          ▼
- llama-3.1-8b-instant
+```bash
+cd frontend
+npm ci
+npm run build
 ```
-
-| Priority | Model | Role |
-|---|---|---|
-| 1 | `llama-3.3-70b-versatile` | Primary |
-| 2 | `llama3-8b-8192` | Fallback |
-| 3 | `llama-3.1-8b-instant` | Final fallback |
 
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Requirements
 
 You need:
 
-- Node.js 18+
-- Python 3.11+
-- Docker + Docker Compose
-- Supabase project
-- Groq API key
+- Docker
+- Docker Compose v2
 
----
-
-### Option 1 — Docker Compose
+### Run the full stack
 
 ```bash
-git clone https://github.com/azim-haffar/HireLens.git
-cd HireLens
+git clone https://github.com/azim-haffar/OrderFlow.git
+cd OrderFlow
+
+docker compose up --build
 ```
 
-Configure environment variables:
+### Services
 
-```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-```
-
-Add your credentials to the `.env` files.
-
-Then start the application:
-
-```bash
-docker-compose up --build
-```
-
-### Local services
-
-| Service | URL |
+| Service | Address |
 |---|---|
 | Frontend | http://localhost:5173 |
-| Backend API | http://localhost:8001 |
-| Swagger / API Docs | http://localhost:8001/docs |
+| Backend | http://localhost:8080 |
+| PostgreSQL | localhost:5432 |
+| Redis | localhost:6379 |
+| Kafka | localhost:9092 |
 
----
-
-### Option 2 — Local Development
-
-#### Backend
-
-```bash
-cd backend
-
-python -m venv venv
-source venv/bin/activate
-
-# Windows
-# venv\Scripts\activate
-
-pip install -r requirements.txt
-
-uvicorn app.main:app --reload
-```
-
-#### Frontend
-
-```bash
-cd frontend
-
-npm install
-npm run dev
-```
-
----
-
-## 🗄️ Supabase Setup
-
-1. Create a project at [supabase.com](https://supabase.com).
-2. Open the SQL Editor.
-3. Run:
-
-```text
-supabase/migrations.sql
-```
-
-4. Enable Google OAuth under:
-
-```text
-Authentication
-    ↓
-Providers
-    ↓
-Google
-```
-
-5. Add the project URL and API keys to the backend and frontend environment files.
-
----
-
-## 🔐 Environment Variables
-
-### Backend
-
-`backend/.env`
-
-| Variable | Purpose |
-|---|---|
-| `GROQ_API_KEY` | Groq API access |
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_ANON_KEY` | Public Supabase API key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-side Supabase key |
-| `RESEND_API_KEY` | Transactional email |
-| `REDIS_URL` | Redis connection |
-| `ENVIRONMENT` | Development / production mode |
-
-### Frontend
-
-`frontend/.env`
-
-| Variable | Purpose |
-|---|---|
-| `VITE_SUPABASE_URL` | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Public Supabase key |
-| `VITE_API_URL` | Backend API URL |
-
-> Never commit production API keys or service-role credentials.
-
----
-
-## 🌐 Deployment
-
-### Frontend — Vercel
-
-```bash
-vercel --cwd frontend
-```
-
-Configure the `VITE_*` environment variables inside the Vercel project.
-
-### Backend — Render
-
-The backend can be deployed through the included `render.yaml` configuration.
-
-Manual configuration:
-
-```text
-Build:
-pip install -r requirements.txt
-
-Start:
-uvicorn app.main:app --host 0.0.0.0 --port $PORT
-```
-
----
-
-## 🔌 API
-
-Interactive API documentation is available through FastAPI at:
-
-```text
-/docs
-```
-
-when the backend is running.
-
-### Main endpoints
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `POST` | `/cv/upload` | Upload and parse CV |
-| `POST` | `/jobs/ingest` | Ingest job posting |
-| `POST` | `/match/score` | Generate match score |
-| `POST` | `/ats/check` | Run ATS audit |
-| `POST` | `/explain/stream` | Stream score explanation |
-| `POST` | `/interview/generate` | Generate interview preparation |
-| `POST` | `/cover-letter/generate` | Generate cover letter |
-| `POST` | `/comparison/compare` | Compare CV versions |
-| `GET` | `/tracker/applications` | Retrieve applications |
-| `POST` | `/roast/cv` | Public CV feedback |
-| `POST` | `/chat/stream` | Context-aware AI chat |
+The full application can be started through a single Docker Compose command.
 
 ---
 
 ## 📁 Project Structure
 
 ```text
-HireLens/
+OrderFlow/
 │
 ├── backend/
-│   ├── app/
-│   │   ├── routers/
-│   │   │   ├── cv
-│   │   │   ├── jobs
-│   │   │   ├── match
-│   │   │   ├── ats
-│   │   │   └── ...
+│   ├── src/
+│   │   ├── main/
+│   │   │   └── Java / Spring Boot application
 │   │   │
-│   │   ├── services/
-│   │   │   ├── CV parsing
-│   │   │   ├── Job scraping
-│   │   │   └── Groq client
-│   │   │
-│   │   ├── models/
-│   │   └── main.py
+│   │   └── test/
+│   │       └── Testcontainers integration tests
 │   │
-│   ├── requirements.txt
-│   └── Dockerfile
+│   └── pom.xml
 │
 ├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── hooks/
-│   │   ├── lib/
-│   │   └── locales/
-│   │
-│   └── public/
+│   └── React + Vite application
 │
-├── supabase/
-│   └── migrations.sql
+├── docs/
+│   └── screenshots/
+│
+├── .github/
+│   └── workflows/
+│       └── CI pipeline
 │
 └── docker-compose.yml
 ```
 
 ---
 
-## 🎬 Demo
+## 🔍 What This Project Demonstrates
 
-<div align="center">
+OrderFlow is primarily a **backend engineering project**.
 
-### Try HireLens
+It demonstrates practical experience with:
 
-<a href="https://hirelens-alpha.vercel.app">
-  <img src="https://img.shields.io/badge/Open_Live_Demo-2563EB?style=for-the-badge&logo=vercel&logoColor=white" />
-</a>
+```text
+REST API design
+      +
+Relational persistence
+      +
+Asynchronous messaging
+      +
+Transactional consistency
+      +
+Concurrency control
+      +
+Caching
+      +
+Integration testing
+      +
+Containerization
+```
 
-</div>
+The focus is not simply connecting technologies together, but understanding the failure modes and consistency problems that appear when those technologies interact.
 
 ---
 
-## 📄 License
+# Deutsch
 
-Distributed under the **MIT License**.
+## Überblick
 
-See [`LICENSE`](LICENSE) for details.
+**OrderFlow** ist ein event-getriebenes Bestellverarbeitungssystem mit Fokus auf Backend-Architektur, Messaging, Datenkonsistenz, Concurrency und Integrationstests.
+
+Ein React-Frontend sendet Bestellungen über eine REST-API. Das Spring-Boot-Backend persistiert Daten in PostgreSQL und verwendet ein **Transactional-Outbox-Muster**, um Events zuverlässig an **Apache Kafka** weiterzugeben.
+
+Ein Inventory-Consumer verarbeitet die Events und schützt Bestandsänderungen durch **pessimistisches Datenbank-Locking**.
+
+Redis cached Produktdaten mit einer TTL von 60 Sekunden.
+
+---
+
+## Architektur
+
+```text
+React
+  │
+  ▼
+Spring Boot REST API
+  │
+  ├────► PostgreSQL
+  │
+  ├────► Redis
+  │
+  └────► Transactional Outbox
+              │
+              ▼
+            Kafka
+              │
+              ▼
+      Inventory Consumer
+              │
+              ▼
+      SELECT FOR UPDATE
+              │
+              ▼
+         PostgreSQL
+```
+
+---
+
+## Technische Schwerpunkte
+
+- Event-getriebene Verarbeitung mit Kafka
+- Kafka KRaft ohne ZooKeeper
+- Transactional-Outbox-Muster
+- Pessimistisches Locking
+- PostgreSQL + JPA / Hibernate
+- Redis Cache
+- RFC 7807 `ProblemDetail`
+- Testcontainers
+- Docker Compose
+- GitHub Actions CI
+
+---
+
+## Wichtige Engineering-Entscheidungen
+
+| Entscheidung | Begründung |
+|---|---|
+| **Pessimistisches Locking** | Schützt den Lagerbestand bei konkurrierenden Bestellungen |
+| **Transactional Outbox** | Verhindert Inkonsistenzen zwischen Datenbank-Commit und Kafka-Publish |
+| **Kafka KRaft** | Reduziert die operative Komplexität ohne ZooKeeper |
+| **Redis Cache** | Reduziert wiederholte Datenbankzugriffe für Produktdaten |
+| **Testcontainers** | Tests laufen gegen echte PostgreSQL-, Kafka- und Redis-Instanzen |
+| **RFC 7807** | Einheitliches, maschinenlesbares API-Fehlerformat |
+| **Status-Guard bei Stornierungen** | Verhindert inkonsistente Änderungen bereits verarbeiteter Bestellungen |
+
+---
+
+## Schnellstart
+
+```bash
+git clone https://github.com/azim-haffar/OrderFlow.git
+cd OrderFlow
+docker compose up --build
+```
+
+### Dienste
+
+| Dienst | Adresse |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend | http://localhost:8080 |
+| PostgreSQL | localhost:5432 |
+| Redis | localhost:6379 |
+| Kafka | localhost:9092 |
+
+---
+
+## Tests
+
+```bash
+cd backend
+mvn verify
+```
+
+Die Integrationstests starten PostgreSQL, Kafka und Redis automatisch über **Testcontainers**.
 
 ---
 
 <div align="center">
 
-### Built by Azim Haffar
+## Built by Azim Haffar
 
-Backend · AI Integration · Full-Stack Engineering
+**Backend Engineering · Distributed Systems · Java / Spring Boot**
 
 <a href="https://azimx.dev">
   <img src="https://img.shields.io/badge/Portfolio-111827?style=for-the-badge&logo=vercel&logoColor=white" />
