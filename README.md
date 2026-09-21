@@ -8,7 +8,7 @@
 
 <p>
   <a href="https://github.com/azim-haffar/OrderFlow/actions">
-    <img src="https://github.com/azim-haffar/OrderFlow/actions/workflows/ci.yml/badge.svg" />
+    <img src="https://github.com/azim-haffar/OrderFlow/actions/workflows/ci.yml/badge.svg" alt="CI" />
   </a>
   <a href="https://github.com/azim-haffar/OrderFlow">
     <img src="https://img.shields.io/badge/Repository-181717?style=for-the-badge&logo=github&logoColor=white" />
@@ -17,11 +17,12 @@
 
 <p>
   <img src="https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white" />
-  <img src="https://img.shields.io/badge/Spring_Boot-3.2-6DB33F?style=flat-square&logo=springboot&logoColor=white" />
+  <img src="https://img.shields.io/badge/Spring_Boot-3.2.5-6DB33F?style=flat-square&logo=springboot&logoColor=white" />
   <img src="https://img.shields.io/badge/Kafka-KRaft-231F20?style=flat-square&logo=apachekafka&logoColor=white" />
   <img src="https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat-square&logo=postgresql&logoColor=white" />
   <img src="https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white" />
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/Testcontainers-1.19.7-2496ED?style=flat-square&logo=docker&logoColor=white" />
 </p>
 
 **[English](#english) · [Deutsch](#deutsch)**
@@ -34,25 +35,29 @@
 
 ## Overview
 
-**OrderFlow** is a full-stack, event-driven order-processing system built to demonstrate reliable backend patterns around messaging, concurrency, persistence, caching, and integration testing.
+**OrderFlow** is a backend-focused, event-driven order-processing system built to demonstrate reliability patterns around asynchronous messaging, transactional consistency, concurrency control, persistence, caching, and integration testing.
 
-A React client submits orders through a REST API. The Spring Boot backend persists application state in PostgreSQL, records events through a **transactional outbox**, and publishes them to **Apache Kafka**. An inventory consumer processes order events while using **pessimistic database locking** to protect stock under concurrent access.
+A React client submits orders through a REST API. The **Spring Boot** backend persists application state in **PostgreSQL**, records outbound events through a **transactional outbox**, and publishes them asynchronously to **Apache Kafka**.
 
-Redis provides a short-lived product cache, while the complete local system runs through Docker Compose.
+An inventory consumer processes order events while using **pessimistic database locking** to protect stock from concurrent updates.
+
+**Redis** caches product data, while **Docker Compose** runs the complete local environment including PostgreSQL, Redis, Kafka, the backend, and the frontend.
 
 ### Core engineering problems demonstrated
 
 - asynchronous event processing
 - transactional consistency
-- Kafka messaging
-- transactional outbox
+- database/Kafka dual-write handling
+- transactional outbox pattern
 - concurrency control
 - pessimistic locking
-- PostgreSQL persistence
-- Redis caching
-- integration testing with real infrastructure
+- relational persistence
+- Redis caching and invalidation
+- integration testing against real infrastructure
 - standardized API error handling
+- database migrations
 - containerized development
+- automated CI
 
 ---
 
@@ -106,7 +111,7 @@ flowchart LR
         API[Spring Boot REST API]
         PS[Product Service]
         OS[Order Service]
-        OP[Outbox Publisher]
+        OP[Outbox Poller]
         INV[Inventory Consumer]
     end
 
@@ -135,10 +140,13 @@ flowchart LR
     OP --> K
 
     K --> INV
-    INV -->|SELECT FOR UPDATE| PG
+    INV -->|PESSIMISTIC_WRITE| PG
+    INV -->|Cache eviction| RD
 ```
 
-### Order lifecycle
+---
+
+## 🔄 Order Lifecycle
 
 ```text
 POST /api/orders
@@ -147,7 +155,7 @@ POST /api/orders
 Validate request
         │
         ▼
-Persist order
+Create order
         │
         ├────────────► PostgreSQL
         │
@@ -158,7 +166,7 @@ Create outbox event
 Commit transaction
         │
         ▼
-Outbox publisher
+Outbox poller
         │
         ▼
 Apache Kafka
@@ -167,7 +175,7 @@ Apache Kafka
 Inventory consumer
         │
         ▼
-SELECT ... FOR UPDATE
+Pessimistic database lock
         │
         ▼
 Check stock
@@ -176,7 +184,186 @@ Check stock
 CONFIRMED  CANCELLED
 ```
 
-### Cancellation flow
+The order and its outbound event are written in the same database transaction.
+
+Kafka publication happens afterward through the outbox poller.
+
+---
+
+## 📬 Transactional Outbox
+
+Publishing directly to Kafka inside the order transaction creates a dual-write problem:
+
+```text
+Database commit succeeds
+        +
+Kafka publish fails
+        │
+        ▼
+Inconsistent system state
+```
+
+OrderFlow avoids that failure window by storing the order and its event together:
+
+```text
+Database transaction
+        │
+        ├── Order row
+        │
+        └── Outbox event
+                │
+                ▼
+             PENDING
+                │
+                ▼
+         Outbox poller
+                │
+                ▼
+              Kafka
+                │
+                ▼
+            PUBLISHED
+```
+
+The outbox poller periodically reads pending events and publishes them to Kafka.
+
+Only after a successful Kafka send is the event marked as `PUBLISHED`.
+
+If publication fails, the event remains pending and can be processed again by a later poll.
+
+---
+
+## 🔒 Concurrency Control
+
+Inventory updates use **pessimistic write locking**.
+
+The repository acquires the product row using:
+
+```text
+LockModeType.PESSIMISTIC_WRITE
+```
+
+Conceptually, this corresponds to database behaviour similar to:
+
+```sql
+SELECT ...
+FOR UPDATE;
+```
+
+The lock remains active while stock is checked and updated.
+
+This protects inventory when multiple order events attempt to modify the same product concurrently.
+
+```text
+Consumer A ─────┐
+                │
+                ▼
+           Product row
+                ▲
+                │ locked
+                │
+Consumer B ─────┘
+        waits until lock is released
+```
+
+---
+
+## ⚡ Redis Caching
+
+Product reads are cached through Spring's `CacheManager` backed by Redis.
+
+The application maintains two product caches:
+
+| Cache | Purpose | TTL |
+|---|---|---:|
+| `products` | Full product list | **2 minutes** |
+| `product` | Individual product lookup | **5 minutes** |
+
+The service accesses the cache explicitly through `CacheManager`.
+
+When inventory changes after an order is processed, the relevant product caches are evicted so later reads do not continue returning stale stock values.
+
+```text
+Inventory updated
+      │
+      ▼
+Evict product cache
+      │
+      ├── products / "all"
+      └── product / {id}
+```
+
+---
+
+## 🧠 Engineering Decisions
+
+| Decision | Reason |
+|---|---|
+| **Transactional outbox** | Reduces the database/Kafka dual-write failure window |
+| **Kafka KRaft** | Runs Kafka without a separate ZooKeeper service |
+| **Pessimistic locking** | Protects inventory during concurrent order processing |
+| **PostgreSQL** | Provides transactional relational persistence |
+| **Redis caching** | Reduces repeated product reads |
+| **Explicit cache eviction** | Prevents stale stock data after inventory updates |
+| **Flyway** | Keeps database schema changes versioned |
+| **RFC 7807 `ProblemDetail`** | Provides standardized machine-readable API errors |
+| **Status-guarded cancellation** | Prevents invalid modifications to already-processed orders |
+| **Testcontainers** | Exercises the application against real infrastructure |
+| **GitHub Actions CI** | Automatically validates backend tests and frontend builds |
+
+---
+
+## 🔄 Event-Driven Processing
+
+The primary asynchronous path is:
+
+```text
+REST request
+     │
+     ▼
+Spring Boot
+     │
+     ▼
+PostgreSQL
+ + Outbox
+     │
+     ▼
+Outbox Poller
+     │
+     ▼
+Apache Kafka
+     │
+     ▼
+Inventory Consumer
+     │
+     ▼
+Pessimistic Lock
+     │
+     ▼
+Inventory Update
+     │
+     ▼
+Cache Eviction
+     │
+     ▼
+Order Status
+```
+
+Possible order states include:
+
+```text
+PLACED
+   │
+   ├────► CONFIRMED
+   │
+   └────► CANCELLED
+```
+
+---
+
+## ❌ Cancellation Rules
+
+Orders may be cancelled only while they remain in the `PLACED` state.
 
 ```text
 DELETE /api/orders/{id}
@@ -192,132 +379,7 @@ PLACED     Other
 CANCELLED   409 Conflict
 ```
 
----
-
-## ⚙️ Engineering Decisions
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### 🔒 Pessimistic Locking
-
-Inventory updates use:
-
-```sql
-SELECT ... FOR UPDATE
-```
-
-This prevents concurrent consumers from overselling the same stock.
-
-The database row is locked while inventory is checked and updated.
-
-</td>
-
-<td width="50%" valign="top">
-
-### 📬 Transactional Outbox
-
-The order and its outbound event are committed atomically.
-
-```text
-Order transaction
-      │
-      ├── Order row
-      └── Outbox row
-```
-
-A publisher then forwards pending events to Kafka and can retry delivery if Kafka is temporarily unavailable.
-
-</td>
-</tr>
-
-<tr>
-<td width="50%" valign="top">
-
-### ⚡ Redis Cache
-
-Product catalogue data is cached in Redis with a:
-
-```text
-60-second TTL
-```
-
-The implementation uses direct `CacheManager` access rather than relying on internal `@Cacheable` self-invocation.
-
-</td>
-
-<td width="50%" valign="top">
-
-### 🧪 Real Integration Tests
-
-Tests use **Testcontainers** to start real:
-
-- PostgreSQL
-- Kafka
-- Redis
-
-This keeps infrastructure-facing tests close to the actual runtime environment instead of replacing those dependencies with mocks.
-
-</td>
-</tr>
-</table>
-
----
-
-## 🧠 Additional Design Decisions
-
-| Decision | Why |
-|---|---|
-| **Kafka KRaft** | Removes the need for a separate ZooKeeper coordination layer |
-| **Transactional outbox** | Prevents a database/Kafka dual-write failure window |
-| **Pessimistic locking** | Protects inventory under concurrent order processing |
-| **Redis caching** | Reduces repeated product catalogue reads |
-| **Denormalized `productName`** | Preserves the product name associated with the order at creation time |
-| **No Lombok `@Data` on JPA entities** | Avoids problematic generated equality/hash behaviour across Hibernate associations and proxies |
-| **RFC 7807 `ProblemDetail`** | Provides standardized machine-readable API errors |
-| **Status-guarded cancellation** | Prevents already-processed orders from being modified inconsistently |
-| **Testcontainers** | Exercises PostgreSQL, Kafka, and Redis through real containerized services |
-
----
-
-## 🔄 Event-Driven Processing
-
-The main asynchronous flow is:
-
-```text
-REST Request
-     │
-     ▼
-Spring Boot
-     │
-     ▼
-PostgreSQL
- + Outbox
-     │
-     ▼
-Kafka
-     │
-     ▼
-Inventory Consumer
-     │
-     ▼
-Database Lock
-     │
-     ▼
-Stock Update
-     │
-     ▼
-Order Status
-```
-
-Possible order states include:
-
-```text
-PLACED → CONFIRMED
-   │
-   └────→ CANCELLED
-```
+This prevents already-processed orders from being modified into an inconsistent state.
 
 ---
 
@@ -339,7 +401,7 @@ PLACED → CONFIRMED
 | `GET` | `/api/orders` | Retrieve recent orders |
 | `DELETE` | `/api/orders/{id}` | Cancel a `PLACED` order |
 
-### Example order
+### Example Order
 
 ```json
 {
@@ -349,16 +411,26 @@ PLACED → CONFIRMED
 }
 ```
 
-### Error responses
+### Error Responses
 
 The API uses standardized **RFC 7807 Problem Details**.
 
-Typical status codes:
+Typical responses include:
 
 ```text
 400  Validation failure
-404  Order / product not found
+404  Order or product not found
 409  Insufficient stock or invalid order state
+```
+
+Example structure:
+
+```json
+{
+  "type": "https://orderflow.example/errors/order-not-found",
+  "status": 404,
+  "detail": "..."
+}
 ```
 
 ---
@@ -373,7 +445,11 @@ Typical status codes:
 
 <br>
 
-`Java 21` · `Spring Boot 3.2` · `Spring Kafka`
+`Java 21` · `Spring Boot 3.2.5` · `Spring Kafka`
+
+<br>
+
+`Spring Data JPA` · `Hibernate` · `Bean Validation`
 
 <br><br>
 
@@ -383,7 +459,7 @@ Typical status codes:
 
 <br>
 
-`PostgreSQL 15` · `Redis 7` · `Spring Data JPA` · `Hibernate 6` · `Flyway`
+`PostgreSQL 15` · `Redis 7` · `Flyway`
 
 <br><br>
 
@@ -413,24 +489,21 @@ Typical status codes:
 
 <br>
 
-`JUnit 5` · `Testcontainers` · `Awaitility` · `Docker Compose` · `nginx`
+`JUnit 5` · `Testcontainers 1.19.7` · `Awaitility`
+
+<br>
+
+`Docker` · `Docker Compose` · `GitHub Actions` · `nginx`
 
 </div>
 
 ---
 
-## 🧪 Testing
+## 🧪 Integration Testing
 
-The backend integration tests run against real containerized infrastructure using **Testcontainers**.
+The backend integration tests run against **real containerized dependencies** through Testcontainers rather than replacing infrastructure with mocks.
 
-### Run backend tests
-
-```bash
-cd backend
-mvn verify
-```
-
-Testcontainers automatically starts:
+The test environment starts:
 
 ```text
 PostgreSQL 15
@@ -438,15 +511,99 @@ Apache Kafka
 Redis 7
 ```
 
-No manual database, Kafka, or Redis setup is required.
+### Run Backend Tests
 
-### Validate the frontend
+```bash
+cd backend
+mvn verify
+```
+
+Testcontainers handles infrastructure startup and connection configuration for the tests.
+
+No manually configured PostgreSQL, Kafka, or Redis instance is required.
+
+### Validate the Frontend
 
 ```bash
 cd frontend
-npm ci
+npm install
 npm run build
 ```
+
+---
+
+## 🔁 Continuous Integration
+
+GitHub Actions runs CI on:
+
+```text
+push → main
+pull request → main
+```
+
+The pipeline contains two independent jobs.
+
+### Backend
+
+```text
+Ubuntu
+  │
+  ▼
+Java 21 / Temurin
+  │
+  ▼
+Maven
+  │
+  ▼
+mvn verify
+  │
+  ▼
+Testcontainers
+  │
+  ├── PostgreSQL
+  ├── Kafka
+  └── Redis
+```
+
+Test reports are uploaded as workflow artifacts.
+
+### Frontend
+
+```text
+Ubuntu
+  │
+  ▼
+Node.js 20
+  │
+  ▼
+Install dependencies
+  │
+  ▼
+npm run build
+  │
+  ▼
+Upload dist artifact
+```
+
+The CI pipeline verifies both the backend integration-test suite and the frontend production build.
+
+---
+
+## 🐳 Local Infrastructure
+
+The complete development environment is defined in Docker Compose.
+
+```text
+Docker Compose
+    │
+    ├── PostgreSQL 15
+    ├── Redis 7
+    ├── Kafka / KRaft
+    ├── Spring Boot backend
+    └── React frontend / nginx
+```
+
+PostgreSQL, Redis, and Kafka include health checks, and the backend waits for its infrastructure dependencies before starting.
 
 ---
 
@@ -459,12 +616,16 @@ You need:
 - Docker
 - Docker Compose v2
 
-### Run the full stack
+### Clone
 
 ```bash
 git clone https://github.com/azim-haffar/OrderFlow.git
 cd OrderFlow
+```
 
+### Start the Full Stack
+
+```bash
 docker compose up --build
 ```
 
@@ -478,7 +639,7 @@ docker compose up --build
 | Redis | localhost:6379 |
 | Kafka | localhost:9092 |
 
-The full application can be started through a single Docker Compose command.
+The complete system can be started with one Docker Compose command.
 
 ---
 
@@ -490,53 +651,89 @@ OrderFlow/
 ├── backend/
 │   ├── src/
 │   │   ├── main/
-│   │   │   └── Java / Spring Boot application
+│   │   │   ├── java/com/orderflow/
+│   │   │   │   ├── config/
+│   │   │   │   ├── consumer/
+│   │   │   │   ├── controller/
+│   │   │   │   ├── dto/
+│   │   │   │   ├── entity/
+│   │   │   │   ├── exception/
+│   │   │   │   ├── outbox/
+│   │   │   │   ├── repository/
+│   │   │   │   └── service/
+│   │   │   │
+│   │   │   └── resources/
+│   │   │       └── db/migration/
 │   │   │
 │   │   └── test/
 │   │       └── Testcontainers integration tests
 │   │
+│   ├── Dockerfile
 │   └── pom.xml
 │
 ├── frontend/
-│   └── React + Vite application
+│   ├── src/
+│   │   ├── components/
+│   │   └── hooks/
+│   │
+│   ├── Dockerfile
+│   └── package.json
 │
 ├── docs/
 │   └── screenshots/
 │
 ├── .github/
 │   └── workflows/
-│       └── CI pipeline
+│       └── ci.yml
 │
-└── docker-compose.yml
+├── .env.example
+├── docker-compose.yml
+└── README.md
 ```
 
 ---
 
 ## 🔍 What This Project Demonstrates
 
-OrderFlow is primarily a **backend engineering project**.
+OrderFlow is primarily a **backend engineering and distributed-systems project**.
 
-It demonstrates practical experience with:
+It combines:
 
 ```text
-REST API design
+REST API Design
       +
-Relational persistence
+Spring Boot
       +
-Asynchronous messaging
+PostgreSQL
       +
-Transactional consistency
+Transactional Outbox
       +
-Concurrency control
+Apache Kafka
       +
-Caching
+Concurrency Control
       +
-Integration testing
+Redis Caching
       +
-Containerization
+Integration Testing
+      +
+Docker
+      +
+CI
 ```
 
-The focus is not simply connecting technologies together, but understanding the failure modes and consistency problems that appear when those technologies interact.
+The main value of the project is not simply the number of technologies involved.
+
+It demonstrates how those technologies interact when handling concrete backend problems:
+
+- keeping database state and outbound events consistent
+- processing work asynchronously
+- protecting shared inventory from concurrent updates
+- managing cache freshness after writes
+- enforcing valid state transitions
+- standardizing API errors
+- testing infrastructure-dependent behaviour
+- reproducing the system through containers
+- validating changes automatically through CI
 
 ---
 
@@ -544,13 +741,15 @@ The focus is not simply connecting technologies together, but understanding the 
 
 ## Überblick
 
-**OrderFlow** ist ein event-getriebenes Bestellverarbeitungssystem mit Fokus auf Backend-Architektur, Messaging, Datenkonsistenz, Concurrency und Integrationstests.
+**OrderFlow** ist ein backend-orientiertes, event-getriebenes Bestellverarbeitungssystem mit Fokus auf **Messaging, Datenkonsistenz, Concurrency, Persistenz, Caching und Integrationstests**.
 
-Ein React-Frontend sendet Bestellungen über eine REST-API. Das Spring-Boot-Backend persistiert Daten in PostgreSQL und verwendet ein **Transactional-Outbox-Muster**, um Events zuverlässig an **Apache Kafka** weiterzugeben.
+Ein React-Frontend sendet Bestellungen über eine REST-API.
 
-Ein Inventory-Consumer verarbeitet die Events und schützt Bestandsänderungen durch **pessimistisches Datenbank-Locking**.
+Das **Spring-Boot-Backend** speichert den Anwendungszustand in **PostgreSQL**, schreibt ausgehende Events über ein **Transactional-Outbox-Muster** und veröffentlicht diese anschließend asynchron über **Apache Kafka**.
 
-Redis cached Produktdaten mit einer TTL von 60 Sekunden.
+Ein Inventory-Consumer verarbeitet die Events und verwendet **pessimistisches Datenbank-Locking**, um konkurrierende Bestandsänderungen zu schützen.
+
+**Redis** cached Produktdaten, während die vollständige lokale Umgebung über **Docker Compose** ausgeführt wird.
 
 ---
 
@@ -569,16 +768,19 @@ Spring Boot REST API
   └────► Transactional Outbox
               │
               ▼
+         Outbox Poller
+              │
+              ▼
             Kafka
               │
               ▼
       Inventory Consumer
               │
               ▼
-      SELECT FOR UPDATE
+     Pessimistic Lock
               │
               ▼
-         PostgreSQL
+       PostgreSQL
 ```
 
 ---
@@ -591,6 +793,8 @@ Spring Boot REST API
 - Pessimistisches Locking
 - PostgreSQL + JPA / Hibernate
 - Redis Cache
+- Cache-Invalidierung nach Bestandsänderungen
+- Flyway-Datenbankmigrationen
 - RFC 7807 `ProblemDetail`
 - Testcontainers
 - Docker Compose
@@ -598,17 +802,74 @@ Spring Boot REST API
 
 ---
 
+## Transactional Outbox
+
+Bestellung und ausgehendes Event werden innerhalb derselben Datenbanktransaktion gespeichert.
+
+```text
+Datenbanktransaktion
+        │
+        ├── Bestellung
+        └── Outbox Event
+                │
+                ▼
+             PENDING
+                │
+                ▼
+         Outbox Poller
+                │
+                ▼
+              Kafka
+                │
+                ▼
+            PUBLISHED
+```
+
+Dadurch wird das Risiko einer Inkonsistenz zwischen Datenbank-Commit und Kafka-Publish reduziert.
+
+---
+
+## Concurrency Control
+
+Beim Aktualisieren des Lagerbestands verwendet OrderFlow:
+
+```text
+LockModeType.PESSIMISTIC_WRITE
+```
+
+Dadurch wird der betroffene Produktdatensatz während der Bestandsprüfung und -änderung gesperrt.
+
+Mehrere konkurrierende Consumer können dadurch nicht gleichzeitig denselben Bestand verändern.
+
+---
+
+## Redis Cache
+
+OrderFlow verwendet zwei Redis-Caches:
+
+| Cache | Zweck | TTL |
+|---|---|---:|
+| `products` | Gesamte Produktliste | **2 Minuten** |
+| `product` | Einzelnes Produkt | **5 Minuten** |
+
+Nach einer Bestandsänderung werden die betroffenen Cache-Einträge explizit invalidiert.
+
+---
+
 ## Wichtige Engineering-Entscheidungen
 
 | Entscheidung | Begründung |
 |---|---|
-| **Pessimistisches Locking** | Schützt den Lagerbestand bei konkurrierenden Bestellungen |
-| **Transactional Outbox** | Verhindert Inkonsistenzen zwischen Datenbank-Commit und Kafka-Publish |
-| **Kafka KRaft** | Reduziert die operative Komplexität ohne ZooKeeper |
-| **Redis Cache** | Reduziert wiederholte Datenbankzugriffe für Produktdaten |
-| **Testcontainers** | Tests laufen gegen echte PostgreSQL-, Kafka- und Redis-Instanzen |
+| **Transactional Outbox** | Reduziert Inkonsistenzen zwischen Datenbank und Kafka |
+| **Kafka KRaft** | Kafka läuft ohne separaten ZooKeeper-Service |
+| **Pessimistisches Locking** | Schützt Lagerbestand bei konkurrierenden Bestellungen |
+| **Redis Cache** | Reduziert wiederholte Produktabfragen |
+| **Cache-Invalidierung** | Verhindert veraltete Bestandsdaten nach Updates |
+| **Flyway** | Versioniert Änderungen am Datenbankschema |
 | **RFC 7807** | Einheitliches, maschinenlesbares API-Fehlerformat |
-| **Status-Guard bei Stornierungen** | Verhindert inkonsistente Änderungen bereits verarbeiteter Bestellungen |
+| **Status-Guard bei Stornierungen** | Verhindert ungültige Änderungen an bereits verarbeiteten Bestellungen |
+| **Testcontainers** | Tests laufen gegen echte PostgreSQL-, Kafka- und Redis-Instanzen |
+| **GitHub Actions** | Automatisiert Backend-Tests und Frontend-Builds |
 
 ---
 
@@ -639,7 +900,34 @@ cd backend
 mvn verify
 ```
 
-Die Integrationstests starten PostgreSQL, Kafka und Redis automatisch über **Testcontainers**.
+Die Integrationstests starten automatisch:
+
+```text
+PostgreSQL 15
+Apache Kafka
+Redis 7
+```
+
+über **Testcontainers**.
+
+---
+
+## CI
+
+GitHub Actions validiert Änderungen an `main` und Pull Requests gegen `main`.
+
+Die Pipeline führt aus:
+
+```text
+Backend
+  └── Java 21
+      └── mvn verify
+          └── Testcontainers
+
+Frontend
+  └── Node.js 20
+      └── npm run build
+```
 
 ---
 
