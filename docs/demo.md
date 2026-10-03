@@ -61,6 +61,7 @@ from the checkout's `backend` directory under `/mnt/c/`.
   partition. A production design needs alerting, durable dead-letter handling and
   an explicit replay policy. Deserialization failures are not covered here.
 - Redis invalidation is outside PostgreSQL's transaction. Eviction before commit
-  can permit a concurrent read to cache older stock until the 60-second TTL.
+  can permit a concurrent read to cache older stock until the two-minute list TTL
+  or five-minute individual-product TTL expires.
   A cache failure currently rolls inventory back and is retried; an after-commit
   invalidation workflow would decouple cache availability from order completion.

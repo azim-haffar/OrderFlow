@@ -67,7 +67,8 @@ transition, not arbitrary event workflows. Permanent listener failures can block
 a partition. No durable dead-letter/replay workflow or deserialization recovery
 test. No multi-instance outbox coordination, authentication, production deployment
 verification or measured load benchmark. Redis eviction is not atomic with the
-database commit and can leave stale reads until TTL. Recovery tests inject boundary
+database commit and can leave stale reads until the two-minute list TTL or
+five-minute individual-product TTL expires. Recovery tests inject boundary
 exceptions; they do not simulate an actual process crash or prolonged broker outage.
 
 See [demo and walkthrough](demo.md) for commands and interview tradeoffs.

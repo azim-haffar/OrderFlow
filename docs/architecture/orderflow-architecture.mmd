@@ -1,0 +1,51 @@
+%% OrderFlow — architecture inspected from source
+%%
+%% Derived from the actual repository:
+%%   backend/src/main/java/com/orderflow/controller  (OrderController, ProductController)
+%%   backend/src/main/java/com/orderflow/service      (OrderService, InventoryService, ProductService)
+%%   backend/src/main/java/com/orderflow/outbox        (OutboxPoller)
+%%   backend/src/main/java/com/orderflow/consumer      (OrderEventConsumer)
+%%   backend/src/main/java/com/orderflow/config        (KafkaConfig, RedisConfig, CacheConfig)
+%%   backend/src/main/java/com/orderflow/repository/ProductRepository.java (findByIdWithLock)
+%%   docker-compose.yml (single postgres/redis/kafka/backend/frontend services)
+%%
+%% OutboxPoller, OrderEventConsumer and InventoryService are @Component/@Service
+%% classes inside the single Spring Boot application — not separate services.
+%% There is only one PostgreSQL database ("orderflow"), referenced twice below
+%% (initial order write, later inventory update) — not two databases.
+
+flowchart TD
+    FE["React frontend<br/>(Vite build, served by nginx)"]
+    CTRL["Spring Boot 3<br/>OrderController / ProductController"]
+    REDIS[("Redis<br/>product cache<br/>2 min / 5 min TTL")]
+    PG1[("PostgreSQL<br/>orderflow")]
+    POLLER["OutboxPoller<br/>1s fixed delay; mark published after ack"]
+    TOPIC(["Kafka topic<br/>order-events"])
+    CONSUMER["OrderEventConsumer<br/>propagate failures; auto-commit disabled"]
+    INV["InventoryService<br/>lock order; ignore terminal status; lock product"]
+    CANCEL["OrderService.cancelOrder<br/>same order lock; PLACED → CANCELLED<br/>terminal status → HTTP 409"]
+    PG2[("PostgreSQL<br/>orderflow (same database)")]
+    STATUS["Order status<br/>CONFIRMED / CANCELLED"]
+
+    FE -->|HTTP/REST| CTRL
+    CTRL -->|cache read/write| REDIS
+    CTRL -->|DELETE order| CANCEL
+    CTRL -->|"save Order + Outbox row<br/>(same transaction)"| PG1
+    PG1 -->|reads pending rows| POLLER
+    POLLER -->|publish| TOPIC
+    TOPIC -.->|"ack → mark PUBLISHED; crash gap permits replay"| PG1
+    TOPIC -->|consume| CONSUMER
+    CONSUMER --> INV
+    CONSUMER -.->|"retryable failure → retry every 1s"| TOPIC
+    INV -->|"stock + terminal status commit together"| PG2
+    CANCEL -->|"same order lock; no stock change"| PG2
+    PG2 --> STATUS
+    INV -.->|evict on confirm| REDIS
+
+    classDef app fill:#161b22,stroke:#30363d,color:#e6edf3;
+    classDef infra fill:#0d1117,stroke:#3fb950,color:#e6edf3;
+    classDef outcome fill:#0d1117,stroke:#58a6ff,color:#e6edf3;
+
+    class FE,CTRL,POLLER,CONSUMER,INV,CANCEL app;
+    class REDIS,PG1,PG2,TOPIC infra;
+    class STATUS outcome;

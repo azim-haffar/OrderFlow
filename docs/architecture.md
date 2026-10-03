@@ -10,7 +10,7 @@ Terminal states are ignored on redelivery. This guard handles duplicates for thi
 
 ## Read path
 
-Product reads use Redis caching. Inventory updates evict the affected product. PostgreSQL remains the source of truth. Cache eviction is an external operation and is not atomic with the database commit; stronger cache consistency would need a separate invalidation strategy.
+Product reads use Redis caching: a two-minute TTL for the product list and a five-minute TTL for individual products. Inventory updates evict both entries. PostgreSQL remains the source of truth. Cache eviction is an external operation and is not atomic with the database commit; stronger cache consistency would need a separate invalidation strategy.
 
 ## Test strategy
 
