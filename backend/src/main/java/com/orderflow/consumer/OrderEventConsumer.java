@@ -22,10 +22,8 @@ public class OrderEventConsumer {
     )
     public void handleOrderPlaced(OrderPlacedEvent event) {
         log.info("Received OrderPlacedEvent for order {}", event.orderId());
-        try {
-            inventoryService.processOrderPlaced(event);
-        } catch (Exception ex) {
-            log.error("Error processing OrderPlacedEvent for order {}: {}", event.orderId(), ex.getMessage(), ex);
-        }
+        // Propagate failures so the container retries instead of acknowledging
+        // an event whose database transaction rolled back.
+        inventoryService.processOrderPlaced(event);
     }
 }

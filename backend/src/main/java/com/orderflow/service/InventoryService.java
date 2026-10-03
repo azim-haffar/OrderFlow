@@ -28,6 +28,7 @@ public class InventoryService {
         // Kafka/outbox delivery is at least once. Lock the order before checking
         // its state so concurrent duplicates cannot deduct inventory twice.
         if (order.getStatus() != Order.Status.PLACED) {
+            log.info("Ignoring delivery for terminal order {} ({})", order.getId(), order.getStatus());
             return;
         }
 
