@@ -85,7 +85,7 @@ public class OrderService {
 
     @Transactional
     public void cancelOrder(Long id) {
-        Order order = orderRepository.findById(id)
+        Order order = orderRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new OrderNotFoundException(id));
 
         if (order.getStatus() != Order.Status.PLACED) {
