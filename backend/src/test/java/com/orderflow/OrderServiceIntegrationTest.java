@@ -3,6 +3,8 @@ package com.orderflow;
 import com.orderflow.dto.OrderResponse;
 import com.orderflow.dto.PlaceOrderRequest;
 import com.orderflow.entity.Order;
+import com.orderflow.event.OrderPlacedEvent;
+import com.orderflow.service.InventoryService;
 import com.orderflow.repository.OrderRepository;
 import com.orderflow.repository.ProductRepository;
 import com.orderflow.service.OrderService;
@@ -19,6 +21,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
+import java.math.BigDecimal;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -60,6 +66,41 @@ class OrderServiceIntegrationTest {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private InventoryService inventoryService;
+
+    @Test
+    void concurrentDuplicateEventsDeductStockOnlyOnce() throws Exception {
+        long productId = 2L;
+        int initialStock = productRepository.findById(productId).orElseThrow().getStockQuantity();
+        Order order = new Order();
+        order.setCustomerId("duplicate-delivery-test");
+        order.setTotalAmount(BigDecimal.TEN);
+        Order saved = orderRepository.saveAndFlush(order);
+        OrderPlacedEvent event = new OrderPlacedEvent(saved.getId(), productId, 2,
+                BigDecimal.TEN, saved.getCustomerId(), saved.getCreatedAt());
+        CountDownLatch start = new CountDownLatch(1);
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var first = executor.submit(() -> {
+                start.await();
+                inventoryService.processOrderPlaced(event);
+                return null;
+            });
+            var second = executor.submit(() -> {
+                start.await();
+                inventoryService.processOrderPlaced(event);
+                return null;
+            });
+            start.countDown();
+            first.get(30, TimeUnit.SECONDS);
+            second.get(30, TimeUnit.SECONDS);
+        }
+        assertThat(productRepository.findById(productId).orElseThrow().getStockQuantity())
+                .isEqualTo(initialStock - 2);
+        assertThat(orderRepository.findById(saved.getId()).orElseThrow().getStatus())
+                .isEqualTo(Order.Status.CONFIRMED);
+    }
 
     @Test
     void placeOrder_shouldBeConfirmedAndStockDecremented() {

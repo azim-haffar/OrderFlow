@@ -4,7 +4,6 @@ import com.orderflow.entity.Order;
 import com.orderflow.entity.Product;
 import com.orderflow.event.OrderPlacedEvent;
 import com.orderflow.exception.OrderNotFoundException;
-import com.orderflow.exception.ProductNotFoundException;
 import com.orderflow.repository.OrderRepository;
 import com.orderflow.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,16 +22,22 @@ public class InventoryService {
 
     @Transactional
     public void processOrderPlaced(OrderPlacedEvent event) {
-        Order order = orderRepository.findById(event.orderId())
+        Order order = orderRepository.findByIdWithLock(event.orderId())
                 .orElseThrow(() -> new OrderNotFoundException(event.orderId()));
 
-        Product product = productRepository.findByIdWithLock(event.productId())
-                .orElseThrow(() -> {
-                    log.error("Product {} not found during inventory check for order {}", event.productId(), event.orderId());
-                    order.setStatus(Order.Status.CANCELLED);
-                    orderRepository.save(order);
-                    return new ProductNotFoundException(event.productId());
-                });
+        // Kafka/outbox delivery is at least once. Lock the order before checking
+        // its state so concurrent duplicates cannot deduct inventory twice.
+        if (order.getStatus() != Order.Status.PLACED) {
+            return;
+        }
+
+        Product product = productRepository.findByIdWithLock(event.productId()).orElse(null);
+        if (product == null) {
+            log.error("Product {} not found for order {}", event.productId(), event.orderId());
+            order.setStatus(Order.Status.CANCELLED);
+            orderRepository.save(order);
+            return;
+        }
 
         if (product.getStockQuantity() < event.quantity()) {
             log.warn("Insufficient stock for product {} (order {}): needed {}, have {}",
