@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "audited_at_utc": "2026-10-06T00:48:11.453745+00:00",
+  "revision": "19ba720fae1fb1a8a4cb07b6982d906f95a14d9f",
+  "command": "mvn clean verify -B -Dapi.version=1.44",
+  "build_log_sha256": "4f6e86f57ddc9aa20dec5cf477b3c030c19ffa89a519e1e11fb16d1185b58069",
+  "report_not_before": "2026-10-06T00:43:00+00:00",
+  "suites": [
+    {
+      "name": "com.orderflow.InventoryServiceTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "elapsed_seconds": 6.044,
+      "xml_sha256": "05d99061d18ce4b694159e1544e9c1bd06e60a32dc93779fbb58489ebfbea12b",
+      "cases": [
+        {
+          "name": "cancelledOrderDoesNotReserveInventory",
+          "elapsed_seconds": 0.976
+        },
+        {
+          "name": "missingProductCancelsWithoutThrowingAndRollingBack",
+          "elapsed_seconds": 0.04
+        },
+        {
+          "name": "insufficientStockDoesNotChangeInventory",
+          "elapsed_seconds": 0.016
+        },
+        {
+          "name": "repeatedDeliveryDoesNotDeductStockTwice",
+          "elapsed_seconds": 0.015
+        }
+      ]
+    },
+    {
+      "name": "com.orderflow.OrderReliabilityIntegrationTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "elapsed_seconds": 41.234,
+      "xml_sha256": "a041900b7777b3a366e61ea8df5f047e9483b5f94de49f500eb9a890f970a6e5",
+      "cases": [
+        {
+          "name": "outboxRepublishAfterAcknowledgementBeforeMarkIsSafe",
+          "elapsed_seconds": 3.071
+        },
+        {
+          "name": "kafkaRetriesRolledBackTransactionAndDecrementsOnce",
+          "elapsed_seconds": 1.598
+        },
+        {
+          "name": "deliveryAfterCancellationLeavesStockUntouched",
+          "elapsed_seconds": 0.14
+        },
+        {
+          "name": "processingWinsAndWaitingCancellationReportsConflict",
+          "elapsed_seconds": 0.261
+        },
+        {
+          "name": "concurrentDuplicateWaitsForFirstTransaction",
+          "elapsed_seconds": 0.236
+        },
+        {
+          "name": "cancellationWinsWhileProcessingWaitsOnOrderLock",
+          "elapsed_seconds": 0.231
+        },
+        {
+          "name": "repeatedDeliveryUsesDurableTerminalStatus",
+          "elapsed_seconds": 0.131
+        }
+      ]
+    },
+    {
+      "name": "com.orderflow.OrderServiceIntegrationTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "elapsed_seconds": 12.98,
+      "xml_sha256": "72e5302a61cd3718b2f1fc1a4eb994345feb32678ed797cb46be9511dc637f46",
+      "cases": [
+        {
+          "name": "concurrentDuplicateEventsDeductStockOnlyOnce",
+          "elapsed_seconds": 0.051
+        },
+        {
+          "name": "placeOrder_shouldBeConfirmedAndStockDecremented",
+          "elapsed_seconds": 1.034
+        },
+        {
+          "name": "placeOrder_shouldBeCancelledWhenInsufficientStock",
+          "elapsed_seconds": 1.019
+        }
+      ]
+    },
+    {
+      "name": "com.orderflow.ProductControllerTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "elapsed_seconds": 11.454,
+      "xml_sha256": "b843b6697f76271fc1ab84c0c8ca20dd4131f432b33af26e949c362423d93ddb",
+      "cases": [
+        {
+          "name": "getProduct_shouldReturn404ForNonExistentProduct",
+          "elapsed_seconds": 0.469
+        },
+        {
+          "name": "getProduct_shouldReturnSingleProduct",
+          "elapsed_seconds": 0.055
+        },
+        {
+          "name": "getAllProducts_shouldReturnSeedProducts",
+          "elapsed_seconds": 0.036
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

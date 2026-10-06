@@ -47,6 +47,10 @@ from the checkout's `backend` directory under `/mnt/c/`.
 
 ## Interview tradeoffs
 
+For a measured broker-unavailability scenario and a source-matched test audit,
+see [Kafka failure and recovery](failure-recovery.md). Its isolated experiment
+does not consume stock in the regular demo database.
+
 - The order status doubles as the deduplication marker because each order has one
   inventory-processing transition. A system with multiple independent event types
   needs event IDs and a durable inbox or another deduplication scheme.

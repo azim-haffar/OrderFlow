@@ -14,7 +14,7 @@ A backend engineering portfolio project for reliable asynchronous order processi
 
 OrderFlow demonstrates an event-driven workflow in one Spring Boot application. A React frontend places orders through REST; PostgreSQL saves each order and its outbox event in one transaction. A scheduled publisher sends pending events to Kafka. Inventory processing locks the order, accepts only `PLACED`, then locks the product before confirming or cancelling the order. Redis caches the product list for two minutes and individual products for five minutes. The entire stack runs from `docker compose up --build`.
 
-[Architecture and tradeoffs](docs/architecture.md) · [Reproducible demo and walkthrough](docs/demo.md) · [Verification record](docs/engineering-record.md)
+[Architecture and tradeoffs](docs/architecture.md) · [Reproducible demo and walkthrough](docs/demo.md) · [Verification record](docs/engineering-record.md) · [Measured Kafka failure and recovery](docs/failure-recovery.md)
 
 ![Overview dashboard](docs/screenshots/overview.png)
 
@@ -109,13 +109,15 @@ npm ci && npm run build
 
 Integration tests start PostgreSQL 15, Kafka (Confluent Platform 7.5), and Redis 7 through Testcontainers. With newer Docker engines, the existing test client may need `mvn verify -B -Dapi.version=1.44`.
 
-The local verification run on 3 October 2026 passed **17 tests: 4 unit tests and 13 integration tests**, including 7 reliability scenarios for redelivery, cancellation races, rollback recovery, and outbox replay. The frontend build and local API demo also passed. These are recorded local results, not a claim about a later CI run or production performance.
+Fresh backend verification on **6 October 2026** passed **17 tests: 4 unit tests and 13 integration tests**, including 7 reliability scenarios for redelivery, cancellation races, rollback recovery, and outbox replay. The [audited report](docs/evidence/2026-10-06-test-report.json) matches every testcase to source and records report checksums. The frontend build and original API demo passed on 3 October. These are recorded local results, not a claim about a later CI run or production performance.
 
 ### Demo and limits
 
 From a running, quiet local stack, execute `./scripts/demo.ps1` in PowerShell. It creates a two-unit order, republishes its original event, waits for the duplicate to be observed, and checks stock remains unchanged. It also checks cancellation conflict and insufficient-stock cancellation. Each run consumes two units; it does not reset data. See [the demo guide](docs/demo.md) for the 75–90 second walkthrough.
 
-This is a local portfolio project with one outbox publisher. Multi-instance outbox coordination, durable dead-letter recovery, authentication, deployment hardening, and measured load benchmarks remain future work. Redis eviction is not atomic with the database commit, so a concurrent read can retain stale stock until the two- or five-minute TTL expires. No throughput, latency, or production-use claim is made.
+An [isolated Kafka pause/recovery experiment](docs/failure-recovery.md) also verified three pending orders recovered with exactly three stock deductions and safe replay. It records 20 sequential baseline samples: median POST acceptance 13.28 ms and observed confirmation 1.017 s. Completion includes the one-second outbox schedule and 50 ms client polling. This small local sample establishes behavior under the documented conditions, not throughput or production tail latency.
+
+This is a local portfolio project with one outbox publisher. Multi-instance outbox coordination, durable dead-letter recovery, authentication, deployment hardening, and load benchmarks remain future work. Redis eviction is not atomic with the database commit, so a concurrent read can retain stale stock until the two- or five-minute TTL expires. No production throughput, latency, or usage claim is made.
 
 ---
 
@@ -171,9 +173,11 @@ cd frontend
 npm ci && npm run build
 ```
 
-Die Integrationstests starten PostgreSQL 15, Kafka und Redis 7 via Testcontainers. Neuere Docker-Versionen können `mvn verify -B -Dapi.version=1.44` benötigen. Der lokale Lauf am 3. Oktober 2026 bestand alle 17 Tests (4 Unit- und 13 Integrationstests). Insufficient Stock führt nach Annahme der Bestellung asynchron zu `CANCELLED`.
+Die Integrationstests starten PostgreSQL 15, Kafka und Redis 7 via Testcontainers. Neuere Docker-Versionen können `mvn verify -B -Dapi.version=1.44` benötigen. Der frische lokale Lauf am 6. Oktober 2026 bestand alle 17 Tests (4 Unit- und 13 Integrationstests); der XML-Bericht wurde mit den Testmethoden im Quellcode abgeglichen. Insufficient Stock führt nach Annahme der Bestellung asynchron zu `CANCELLED`.
 
 Stornierung und Verarbeitung verwenden dieselbe Bestellsperre: Gewinnt die Stornierung, bleibt der Bestand unverändert. Gewinnt die Bestätigung, erhält die Stornierung HTTP 409. [Demo und Interview-Ablauf](docs/demo.md) sowie [Nachweise und Grenzen](docs/engineering-record.md) dokumentieren die lokale Prüfung. Produktionshärtung, Dead-Letter-Recovery und Lastmessungen sind noch offen.
+
+Der [Kafka-Ausfallversuch](docs/failure-recovery.md) zeigt drei dauerhaft gespeicherte Bestellungen, unveränderten Bestand während der Pause und sichere Verarbeitung nach Wiederaufnahme. Die Zeitmessungen stammen aus einer kleinen lokalen Stichprobe und sind keine Produktionskennzahlen.
 
 ---
 

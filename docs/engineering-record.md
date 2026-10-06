@@ -1,5 +1,10 @@
 # Engineering record — 3–4 October 2026
 
+Fresh verification and an actual Kafka pause/recovery experiment were added on
+[6 October 2026](failure-recovery.md). The current audited test report and local
+measurement samples are linked there. Earlier ignored build logs and reports may
+be replaced by clean builds; this document records the earlier observations.
+
 ## Source inspected
 
 The starting local commit was `eaf0199`; remote main was `d19c4bc`. Reliability

@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "started_at_utc": "2026-10-06T00:48:01.384044+00:00",
+  "revision": "19ba720fae1fb1a8a4cb07b6982d906f95a14d9f",
+  "tracked_worktree_dirty": true,
+  "python": "3.14.8",
+  "client_platform": "Windows-11-10.0.26300-SP0",
+  "docker": {
+    "server_version": "29.8.1",
+    "cpus": 12,
+    "memory_bytes": 16710770688
+  },
+  "workload": {
+    "product_id": 1,
+    "quantity": 1,
+    "concurrency": 1,
+    "warmup_orders": 3,
+    "measured_orders": 20,
+    "poll_interval_ms": 50
+  },
+  "baseline_samples": [
+    {
+      "order_id": 4,
+      "acceptance_ms": 39.654,
+      "observed_confirmation_ms": 581.248
+    },
+    {
+      "order_id": 5,
+      "acceptance_ms": 13.805,
+      "observed_confirmation_ms": 1025.3
+    },
+    {
+      "order_id": 6,
+      "acceptance_ms": 10.215,
+      "observed_confirmation_ms": 1017.601
+    },
+    {
+      "order_id": 7,
+      "acceptance_ms": 13.754,
+      "observed_confirmation_ms": 1034.306
+    },
+    {
+      "order_id": 8,
+      "acceptance_ms": 11.939,
+      "observed_confirmation_ms": 968.901
+    },
+    {
+      "order_id": 9,
+      "acceptance_ms": 9.021,
+      "observed_confirmation_ms": 996.595
+    },
+    {
+      "order_id": 10,
+      "acceptance_ms": 14.864,
+      "observed_confirmation_ms": 1024.484
+    },
+    {
+      "order_id": 11,
+      "acceptance_ms": 13.45,
+      "observed_confirmation_ms": 1034.284
+    },
+    {
+      "order_id": 12,
+      "acceptance_ms": 13.102,
+      "observed_confirmation_ms": 1016.707
+    },
+    {
+      "order_id": 13,
+      "acceptance_ms": 8.572,
+      "observed_confirmation_ms": 1009.943
+    },
+    {
+      "order_id": 14,
+      "acceptance_ms": 9.074,
+      "observed_confirmation_ms": 1022.422
+    },
+    {
+      "order_id": 15,
+      "acceptance_ms": 9.558,
+      "observed_confirmation_ms": 950.516
+    },
+    {
+      "order_id": 16,
+      "acceptance_ms": 33.646,
+      "observed_confirmation_ms": 1032.425
+    },
+    {
+      "order_id": 17,
+      "acceptance_ms": 8.251,
+      "observed_confirmation_ms": 1043.337
+    },
+    {
+      "order_id": 18,
+      "acceptance_ms": 10.83,
+      "observed_confirmation_ms": 1018.437
+    },
+    {
+      "order_id": 19,
+      "acceptance_ms": 22.102,
+      "observed_confirmation_ms": 984.633
+    },
+    {
+      "order_id": 20,
+      "acceptance_ms": 33.455,
+      "observed_confirmation_ms": 985.306
+    },
+    {
+      "order_id": 21,
+      "acceptance_ms": 23.691,
+      "observed_confirmation_ms": 1026.681
+    },
+    {
+      "order_id": 22,
+      "acceptance_ms": 12.633,
+      "observed_confirmation_ms": 1007.901
+    },
+    {
+      "order_id": 23,
+      "acceptance_ms": 13.542,
+      "observed_confirmation_ms": 1016.516
+    }
+  ],
+  "backend_source_sha256": "18114a7fde8b180290f9c4f16ffe4271c3251d313f3cbb2bdf122a77165b5b92",
+  "containers": [
+    {
+      "Service": "backend",
+      "Image": "orderflow-evidence-backend",
+      "State": "running"
+    },
+    {
+      "Service": "kafka",
+      "Image": "confluentinc/cp-kafka:7.5.0",
+      "State": "running"
+    },
+    {
+      "Service": "postgres",
+      "Image": "postgres:15",
+      "State": "running"
+    },
+    {
+      "Service": "redis",
+      "Image": "redis:7-alpine",
+      "State": "running"
+    }
+  ],
+  "baseline": {
+    "acceptance": {
+      "count": 20,
+      "min_ms": 8.251,
+      "median_ms": 13.276,
+      "p95_nearest_rank_ms": 33.646,
+      "max_ms": 39.654
+    },
+    "observed_confirmation": {
+      "count": 20,
+      "min_ms": 581.248,
+      "median_ms": 1017.154,
+      "p95_nearest_rank_ms": 1034.306,
+      "max_ms": 1043.337
+    },
+    "stock_before": 47,
+    "stock_after": 27
+  },
+  "failure_recovery": {
+    "injection": "docker compose pause kafka; then unpause",
+    "paused_ms": 6747.815,
+    "recovery_timer_start": "immediately before requesting docker compose unpause",
+    "resume_command_ms": 383.183,
+    "outbox_publish_failure_observed": true,
+    "during_outage": {
+      "orders": [
+        "PLACED",
+        "PLACED",
+        "PLACED"
+      ],
+      "pending_rows": 3,
+      "stock": 27
+    },
+    "recovered_orders": [
+      {
+        "order_id": 24,
+        "observed_confirmation_after_resume_ms": 388.647
+      },
+      {
+        "order_id": 25,
+        "observed_confirmation_after_resume_ms": 393.438
+      },
+      {
+        "order_id": 26,
+        "observed_confirmation_after_resume_ms": 397.235
+      }
+    ],
+    "all_rows_published_after_resume_ms": 1482.373,
+    "stock_after_recovery": 24,
+    "explicit_replay_order_id": 24,
+    "explicit_replay_observed": true,
+    "stock_after_replay": 24
+  },
+  "finished_at_utc": "2026-10-06T00:49:02.978666+00:00",
+  "checks_passed": true
+}
